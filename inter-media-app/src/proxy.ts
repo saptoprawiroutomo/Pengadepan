@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request });
+export default async function proxy(request: NextRequest) {
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  });
   const { pathname } = request.nextUrl;
 
   // Public routes - allow without authentication
   if (pathname.startsWith('/api/auth') || 
       pathname.startsWith('/api/seed') ||
       pathname.startsWith('/api/test-db') ||
+      pathname.startsWith('/api/debug-users') ||
+      pathname.startsWith('/api/debug-products') ||
+      pathname.startsWith('/api/create-admin') ||
       pathname.startsWith('/api/products') ||
+      pathname.startsWith('/api/admin/categories') ||
       pathname === '/login' || 
       pathname === '/register' || 
       pathname === '/' ||
       pathname.startsWith('/products') ||
+      pathname.startsWith('/debug-session') ||
       pathname.startsWith('/_next') ||
       pathname.startsWith('/favicon')) {
     return NextResponse.next();

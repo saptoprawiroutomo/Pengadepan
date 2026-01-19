@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
+import PaymentInfo from '@/models/PaymentInfo';
 import { hashPassword } from '@/lib/utils-server';
 
 export async function POST(request: NextRequest) {
@@ -101,6 +102,34 @@ export async function POST(request: NextRequest) {
           images: [],
           isActive: true
         });
+      }
+    }
+
+    // Create payment info
+    const paymentMethods = [
+      {
+        type: 'bank_transfer',
+        bankName: 'Bank BCA',
+        accountNumber: '1234567890',
+        accountName: 'Inter Medi-A',
+        instructions: 'Transfer ke rekening di atas dan kirim bukti transfer via WhatsApp ke 081234567890'
+      },
+      {
+        type: 'bank_transfer', 
+        bankName: 'Bank Mandiri',
+        accountNumber: '0987654321',
+        accountName: 'Inter Medi-A',
+        instructions: 'Transfer ke rekening di atas dan kirim bukti transfer via WhatsApp ke 081234567890'
+      }
+    ];
+
+    for (const paymentData of paymentMethods) {
+      const existing = await PaymentInfo.findOne({ 
+        type: paymentData.type, 
+        bankName: paymentData.bankName 
+      });
+      if (!existing) {
+        await PaymentInfo.create(paymentData);
       }
     }
 

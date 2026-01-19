@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
-import SalesTransaction from '@/models/SalesTransaction';
 import Order from '@/models/Order';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -28,23 +28,10 @@ export async function GET(request: NextRequest) {
       dateFilter.$lte = end;
     }
 
-    const matchStage = dateFilter.createdAt ? { createdAt: dateFilter } : {};
+    const matchStage = Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {};
 
-    // Sales from POS transactions
-    const posTransactions = await SalesTransaction.aggregate([
-      { $match: matchStage },
-      {
-        $group: {
-          _id: null,
-          totalTransactions: { $sum: 1 },
-          totalRevenue: { $sum: '$total' },
-          transactions: { $push: '$$ROOT' }
-        }
-      }
-    ]);
-
-    // Sales from online orders (completed only)
-    const onlineOrders = await Order.aggregate([
+    // Sales from orders (all paid orders)
+    const salesOrders = await Order.aggregate([
       { 
         $match: { 
           ...matchStage,
@@ -56,14 +43,21 @@ export async function GET(request: NextRequest) {
           _id: null,
           totalOrders: { $sum: 1 },
           totalRevenue: { $sum: '$total' },
+          totalShipping: { $sum: '$shippingCost' },
+          totalSubtotal: { $sum: '$subtotal' },
           orders: { $push: '$$ROOT' }
         }
       }
     ]);
 
     // Daily sales aggregation
-    const dailySales = await SalesTransaction.aggregate([
-      { $match: matchStage },
+    const dailySales = await Order.aggregate([
+      { 
+        $match: { 
+          ...matchStage,
+          status: { $in: ['paid', 'processed', 'shipped', 'done'] }
+        }
+      },
       {
         $group: {
           _id: {
@@ -72,30 +66,52 @@ export async function GET(request: NextRequest) {
             day: { $dayOfMonth: '$createdAt' }
           },
           totalSales: { $sum: '$total' },
-          transactionCount: { $sum: 1 }
+          orderCount: { $sum: 1 }
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
     ]);
 
-    const posData = posTransactions[0] || { totalTransactions: 0, totalRevenue: 0, transactions: [] };
-    const orderData = onlineOrders[0] || { totalOrders: 0, totalRevenue: 0, orders: [] };
+    // Payment method breakdown
+    const paymentBreakdown = await Order.aggregate([
+      { 
+        $match: { 
+          ...matchStage,
+          status: { $in: ['paid', 'processed', 'shipped', 'done'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$paymentMethod',
+          count: { $sum: 1 },
+          revenue: { $sum: '$total' }
+        }
+      }
+    ]);
+
+    const orderData = salesOrders[0] || { 
+      totalOrders: 0, 
+      totalRevenue: 0, 
+      totalShipping: 0,
+      totalSubtotal: 0,
+      orders: [] 
+    };
 
     return NextResponse.json({
       summary: {
-        totalTransactions: posData.totalTransactions + orderData.totalOrders,
-        totalRevenue: posData.totalRevenue + orderData.totalRevenue,
-        posTransactions: posData.totalTransactions,
-        posRevenue: posData.totalRevenue,
-        onlineOrders: orderData.totalOrders,
-        onlineRevenue: orderData.totalRevenue
+        totalTransactions: orderData.totalOrders,
+        totalRevenue: orderData.totalRevenue,
+        totalShipping: orderData.totalShipping,
+        totalSubtotal: orderData.totalSubtotal,
+        averageOrderValue: orderData.totalOrders > 0 ? orderData.totalRevenue / orderData.totalOrders : 0
       },
       dailySales,
-      transactions: posData.transactions,
-      orders: orderData.orders
+      paymentBreakdown,
+      orders: orderData.orders.slice(0, 10) // Latest 10 orders
     });
 
   } catch (error: any) {
+    console.error('Sales report error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

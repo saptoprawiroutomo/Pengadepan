@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import Order from '@/models/Order';
 import Cart from '@/models/Cart';
@@ -11,12 +12,17 @@ export async function POST(request: NextRequest) {
   const session = await mongoose.startSession();
   
   try {
-    const userSession = await getServerSession();
+    console.log('Creating order...');
+    
+    const userSession = await getServerSession(authOptions);
     if (!userSession) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { shippingAddress, paymentMethod } = await request.json();
+    const body = await request.json();
+    console.log('Request body:', body);
+    
+    const { shippingAddress, paymentMethod } = body;
 
     if (!shippingAddress) {
       return NextResponse.json({ error: 'Alamat pengiriman wajib diisi' }, { status: 400 });
@@ -87,8 +93,13 @@ export async function POST(request: NextRequest) {
       orderCode,
       userId: userSession.user.id,
       items: orderItems,
-      total,
+      subtotal: total,
+      shippingCost: body.shippingCost || 0,
+      total: total + (body.shippingCost || 0),
       shippingAddress,
+      shippingCourier: body.shippingCourier,
+      shippingService: body.shippingService,
+      shippingEstimate: body.shippingEstimate,
       paymentMethod: paymentMethod || 'transfer',
       status: 'pending'
     }], { session });

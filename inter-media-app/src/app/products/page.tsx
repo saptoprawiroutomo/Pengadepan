@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useCart } from '@/contexts/CartContext';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,8 @@ interface Category {
 }
 
 export default function ProductsPage() {
+  const { data: session } = useSession();
+  const { refreshCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +44,10 @@ export default function ProductsPage() {
       if (categoryFilter) params.append('category', categoryFilter);
       
       const response = await fetch(`/api/products?${params}`);
+      if (!response.ok) {
+        console.error('Failed to fetch products:', response.status);
+        return;
+      }
       const data = await response.json();
       setProducts(data.products || []);
     } catch (error) {
@@ -90,6 +98,33 @@ export default function ProductsPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchProducts();
+  };
+
+  const handleAddToCart = async (productId: string) => {
+    if (!session) {
+      alert('Silakan login terlebih dahulu');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          qty: 1
+        }),
+      });
+
+      if (response.ok) {
+        alert('Produk berhasil ditambahkan ke keranjang');
+        refreshCart();
+      } else {
+        alert('Gagal menambahkan ke keranjang');
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan');
+    }
   };
 
   if (isLoading) {
@@ -170,7 +205,12 @@ export default function ProductsPage() {
                   <Button asChild variant="outline" size="sm" className="flex-1 rounded-2xl">
                     <Link href={`/products/${product.slug}`}>Detail</Link>
                   </Button>
-                  <Button size="sm" className="rounded-2xl" disabled={product.stock === 0}>
+                  <Button 
+                    size="sm" 
+                    className="rounded-2xl" 
+                    disabled={product.stock === 0}
+                    onClick={() => handleAddToCart(product._id)}
+                  >
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
                 </div>

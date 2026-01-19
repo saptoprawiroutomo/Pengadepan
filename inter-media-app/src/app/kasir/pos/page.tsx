@@ -47,6 +47,8 @@ export default function POSPage() {
   }, [session, router]);
 
   const fetchProducts = async () => {
+    if (!session) return;
+    
     try {
       const response = await fetch('/api/admin/products');
       

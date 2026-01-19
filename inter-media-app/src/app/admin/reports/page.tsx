@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Calendar, TrendingUp, Package, Wrench } from 'lucide-react';
+import { FileText, Calendar, TrendingUp, Package, Wrench, FileSpreadsheet, Printer } from 'lucide-react';
 
 export default function ReportsPage() {
   const { data: session } = useSession();
@@ -55,7 +55,11 @@ export default function ReportsPage() {
         fetch('/api/reports/top-products')
       ]);
 
-      if (salesRes.ok) setSalesData(await salesRes.json());
+      if (salesRes.ok) {
+        const salesResult = await salesRes.json();
+        console.log('Sales data:', salesResult);
+        setSalesData(salesResult);
+      }
       if (servicesRes.ok) setServicesData(await servicesRes.json());
       if (stockRes.ok) setStockData(await stockRes.json());
       if (topProductsRes.ok) setTopProductsData(await topProductsRes.json());
@@ -66,33 +70,99 @@ export default function ReportsPage() {
     }
   };
 
-  const exportToPDF = async (reportType: string, data: any) => {
+  const exportToExcel = async () => {
     try {
-      const dateRange = startDate && endDate 
-        ? `${new Date(startDate).toLocaleDateString('id-ID')} - ${new Date(endDate).toLocaleDateString('id-ID')}`
-        : 'Semua Data';
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
 
-      const response = await fetch('/api/reports/export-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportType, data, dateRange }),
-      });
-
+      const response = await fetch(`/api/reports/export-excel?${params}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `laporan-${reportType.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`;
+        a.download = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Gagal export Excel');
+      }
+    } catch (error) {
+      alert('Gagal export Excel');
+    }
+  };
+
+  const exportStockToExcel = async () => {
+    try {
+      const response = await fetch('/api/reports/export-stock');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-stok-${new Date().toISOString().split('T')[0]}.xlsx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
     } catch (error) {
-      alert('Gagal export PDF');
+      alert('Gagal export Excel');
     }
   };
+
+  const exportServicesToExcel = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/reports/export-services?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-servis-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      alert('Gagal export Excel');
+    }
+  };
+
+  const exportTopProductsToExcel = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/reports/export-top-products?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-produk-terlaris-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      alert('Gagal export Excel');
+    }
+  };
+
+  if (!session || session.user.role !== 'admin') {
+    return null;
+  }
 
   if (!session || session.user.role !== 'admin') {
     return <div className="container mx-auto px-4 py-8">Unauthorized</div>;
@@ -141,14 +211,25 @@ export default function ReportsPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Laporan Penjualan</h2>
-              <Button 
-                onClick={() => exportToPDF('Penjualan', salesData)} 
-                disabled={!salesData}
-                className="rounded-2xl"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-sales?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
             </div>
 
             {salesData && (
@@ -183,8 +264,8 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-blue-600" />
                         <div>
-                          <p className="text-2xl font-bold">{salesData.summary.posTransactions}</p>
-                          <p className="text-sm text-muted-foreground">Transaksi POS</p>
+                          <p className="text-2xl font-bold">Rp {salesData.summary.totalSubtotal.toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Subtotal Produk</p>
                         </div>
                       </div>
                     </CardContent>
@@ -195,8 +276,8 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-purple-600" />
                         <div>
-                          <p className="text-2xl font-bold">{salesData.summary.onlineOrders}</p>
-                          <p className="text-sm text-muted-foreground">Order Online</p>
+                          <p className="text-2xl font-bold">Rp {salesData.summary.averageOrderValue.toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Rata-rata Order</p>
                         </div>
                       </div>
                     </CardContent>
@@ -238,14 +319,25 @@ export default function ReportsPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Laporan Servis</h2>
-              <Button 
-                onClick={() => exportToPDF('Servis', servicesData)} 
-                disabled={!servicesData}
-                className="rounded-2xl"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportServicesToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-services?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
             </div>
 
             {servicesData && (
@@ -331,14 +423,20 @@ export default function ReportsPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Laporan Stok</h2>
-              <Button 
-                onClick={() => exportToPDF('Stok', stockData)} 
-                disabled={!stockData}
-                className="rounded-2xl"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportStockToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open('/api/reports/print-stock', '_blank')} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
             </div>
 
             {stockData && (
@@ -442,14 +540,25 @@ export default function ReportsPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Laporan Produk Terlaris</h2>
-              <Button 
-                onClick={() => exportToPDF('Produk-Terlaris', topProductsData)} 
-                disabled={!topProductsData}
-                className="rounded-2xl"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportTopProductsToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-top-products?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
             </div>
 
             {topProductsData && (

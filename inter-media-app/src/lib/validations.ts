@@ -18,6 +18,7 @@ export const productSchema = z.object({
   categoryId: z.string().min(1, 'Kategori wajib dipilih'),
   price: z.number().min(0, 'Harga tidak boleh negatif'),
   stock: z.number().min(0, 'Stok tidak boleh negatif'),
+  weight: z.number().min(0, 'Berat tidak boleh negatif'),
   description: z.string().optional(),
   images: z.array(z.string()).optional(),
 });

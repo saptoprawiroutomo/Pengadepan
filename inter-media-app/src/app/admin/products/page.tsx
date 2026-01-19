@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
@@ -24,6 +24,7 @@ interface Product {
   categoryId: { _id: string; name: string };
   price: number;
   stock: number;
+  images?: string[];
   description?: string;
   isActive: boolean;
   createdAt: string;
@@ -40,6 +41,8 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
@@ -48,6 +51,10 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/admin/products');
+      if (!response.ok) {
+        console.error('Failed to fetch products:', response.status);
+        return;
+      }
       const data = await response.json();
       setProducts(data);
     } catch (error) {
@@ -58,6 +65,10 @@ export default function ProductsPage() {
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/admin/categories');
+      if (!response.ok) {
+        console.error('Failed to fetch categories:', response.status);
+        return;
+      }
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -74,6 +85,22 @@ export default function ProductsPage() {
 
   const onSubmit = async (data: ProductForm) => {
     try {
+      // Convert images to base64
+      const imagePromises = selectedImages.map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+      
+      const imageBase64Array = await Promise.all(imagePromises);
+      
+      const productData = {
+        ...data,
+        images: imageBase64Array
+      };
+      
       const url = editingProduct 
         ? `/api/admin/products/${editingProduct._id}`
         : '/api/admin/products';
@@ -83,22 +110,31 @@ export default function ProductsPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(productData),
       });
 
       if (response.ok) {
         fetchProducts();
-        setIsDialogOpen(false);
-        reset();
-        setEditingProduct(null);
+        handleDialogClose();
+      } else {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        alert(`Error: ${errorData.error || 'Gagal menyimpan produk'}`);
       }
     } catch (error) {
       console.error('Error saving product:', error);
+      alert('Terjadi kesalahan saat menyimpan produk');
     }
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    
+    // Load existing images
+    if (product.images && product.images.length > 0) {
+      setImagePreview(product.images);
+    }
+    
     reset({
       name: product.name,
       categoryId: product.categoryId._id,
@@ -125,9 +161,27 @@ export default function ProductsPage() {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Batasi maksimal 5 gambar
+    if (files.length > 5) {
+      alert('Maksimal 5 gambar per produk');
+      return;
+    }
+    
+    setSelectedImages(files);
+    
+    // Create preview URLs
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreview(previews);
+  };
+
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
+    setSelectedImages([]);
+    setImagePreview([]);
     reset();
   };
 
@@ -151,6 +205,9 @@ export default function ProductsPage() {
               <DialogTitle>
                 {editingProduct ? 'Edit Produk' : 'Tambah Produk'}
               </DialogTitle>
+              <DialogDescription>
+                {editingProduct ? 'Ubah informasi produk yang sudah ada' : 'Tambahkan produk baru ke katalog'}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -219,6 +276,19 @@ export default function ProductsPage() {
                     <p className="text-sm text-destructive mt-1">{errors.stock.message}</p>
                   )}
                 </div>
+                <div>
+                  <Label htmlFor="weight">Berat (gram)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    {...register('weight', { valueAsNumber: true })}
+                    className="rounded-2xl"
+                    placeholder="0"
+                  />
+                  {errors.weight && (
+                    <p className="text-sm text-destructive mt-1">{errors.weight.message}</p>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -230,6 +300,34 @@ export default function ProductsPage() {
                   placeholder="Deskripsi produk (opsional)"
                   rows={3}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="images">Gambar Produk</Label>
+                <Input
+                  id="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="rounded-2xl"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Pilih maksimal 5 gambar produk (JPG, PNG)
+                </p>
+                
+                {imagePreview.length > 0 && (
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {imagePreview.map((preview, index) => (
+                      <img
+                        key={index}
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-20 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
@@ -253,6 +351,7 @@ export default function ProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Gambar</TableHead>
                 <TableHead>Nama</TableHead>
                 <TableHead>Kategori</TableHead>
                 <TableHead>Harga</TableHead>
@@ -264,6 +363,19 @@ export default function ProductsPage() {
             <TableBody>
               {products.map((product) => (
                 <TableRow key={product._id}>
+                  <TableCell>
+                    {product.images && product.images.length > 0 ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded border"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
+                        No Image
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.categoryId.name}</TableCell>
                   <TableCell>Rp {product.price.toLocaleString('id-ID')}</TableCell>

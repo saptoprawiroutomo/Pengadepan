@@ -1,4 +1,5 @@
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Package, Tag, ShoppingCart, Wrench, BarChart3 } from 'lucide-react';
 
 export default async function AdminPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'admin') {
     redirect('/');
@@ -17,8 +18,9 @@ export default async function AdminPage() {
     { title: 'Produk', href: '/admin/products', icon: Package, desc: 'Kelola produk dan stok' },
     { title: 'Users', href: '/admin/users', icon: Users, desc: 'Kelola pengguna sistem' },
     { title: 'Orders', href: '/admin/orders', icon: ShoppingCart, desc: 'Kelola pesanan customer' },
-    { title: 'Servis', href: '/admin/services', icon: Wrench, desc: 'Kelola request servis' },
+    { title: 'Service Requests', href: '/admin/service-requests', icon: Wrench, desc: 'Kelola request servis' },
     { title: 'Laporan', href: '/admin/reports', icon: BarChart3, desc: 'Lihat laporan penjualan' },
+    { title: 'Pembayaran', href: '/admin/payment-settings', icon: BarChart3, desc: 'Kelola rekening bank' },
   ];
 
   return (

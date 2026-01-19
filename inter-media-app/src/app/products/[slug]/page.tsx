@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ interface Product {
 export default function ProductDetailPage() {
   const params = useParams();
   const { data: session } = useSession();
+  const { refreshCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -67,6 +69,7 @@ export default function ProductDetailPage() {
 
       if (response.ok) {
         alert('Produk berhasil ditambahkan ke keranjang');
+        refreshCart(); // Update cart count
       } else {
         alert('Gagal menambahkan ke keranjang');
       }

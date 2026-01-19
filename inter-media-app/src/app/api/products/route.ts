@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,9 +20,7 @@ export async function GET(request: NextRequest) {
     }
     
     if (category) {
-      const categoryDoc = await connectDB().then(() => 
-        require('@/models/Category').default.findOne({ slug: category })
-      );
+      const categoryDoc = await Category.findOne({ slug: category });
       if (categoryDoc) {
         query.categoryId = categoryDoc._id;
       }
@@ -48,6 +47,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
+    console.error('Products API error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

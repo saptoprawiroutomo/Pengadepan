@@ -35,6 +35,10 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/admin/categories');
+      if (!response.ok) {
+        console.error('Failed to fetch categories:', response.status);
+        return;
+      }
       const data = await response.json();
       setCategories(data);
     } catch (error) {

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useCart } from '@/contexts/CartContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,26 +17,7 @@ import {
 
 export default function Header() {
   const { data: session } = useSession();
-  const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    const fetchCartCount = async () => {
-      if (session) {
-        try {
-          const response = await fetch('/api/cart');
-          if (response.ok) {
-            const cart = await response.json();
-            const count = cart.items?.reduce((total: number, item: any) => total + item.qty, 0) || 0;
-            setCartCount(count);
-          }
-        } catch (error) {
-          console.error('Error fetching cart:', error);
-        }
-      }
-    };
-
-    fetchCartCount();
-  }, [session]);
+  const { cartCount } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
@@ -44,7 +25,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} />
+            <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} loading="eager" />
           </Link>
 
           {/* Search Bar */}
@@ -94,7 +75,7 @@ export default function Header() {
                       <Link href="/kasir/pos">POS Kasir</Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => signOut()}>
+                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

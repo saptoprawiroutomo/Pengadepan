@@ -231,7 +231,7 @@ export default function CartPage() {
               </div>
 
               <Button asChild className="w-full rounded-2xl">
-                <Link href="/checkout">Lanjut ke Checkout</Link>
+                <Link href="/checkout-new">Lanjut ke Checkout</Link>
               </Button>
 
               <Button asChild variant="outline" className="w-full rounded-2xl">

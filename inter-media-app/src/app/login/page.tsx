@@ -39,7 +39,17 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Email atau password salah');
       } else {
-        router.push('/');
+        // Get session to check user role
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        if (session?.user?.role === 'admin') {
+          router.push('/admin');
+        } else if (session?.user?.role === 'kasir') {
+          router.push('/kasir');
+        } else {
+          router.push('/');
+        }
         router.refresh();
       }
     } catch (error) {
@@ -53,7 +63,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md rounded-2xl">
         <CardHeader className="text-center">
-          <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mx-auto mb-4" />
+          <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mx-auto mb-4" loading="eager" />
           <CardTitle className="text-2xl">Masuk ke Akun Anda</CardTitle>
         </CardHeader>
         <CardContent>

@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('transfer');
+  const [paymentInfo, setPaymentInfo] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -50,8 +51,21 @@ export default function CheckoutPage() {
       }
     };
 
+    const fetchPaymentInfo = async () => {
+      try {
+        const response = await fetch('/api/payment-info');
+        if (response.ok) {
+          const data = await response.json();
+          setPaymentInfo(data);
+        }
+      } catch (error) {
+        console.error('Error fetching payment info:', error);
+      }
+    };
+
     if (session) {
       fetchCart();
+      fetchPaymentInfo();
     } else {
       setIsLoading(false);
     }
@@ -178,6 +192,25 @@ export default function CheckoutPage() {
                   {isSubmitting ? 'Memproses...' : 'Buat Pesanan'}
                 </Button>
               </form>
+
+              {/* Payment Information */}
+              {paymentMethod === 'transfer' && paymentInfo.length > 0 && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-2xl">
+                  <h3 className="font-semibold mb-3">Informasi Pembayaran</h3>
+                  {paymentInfo
+                    .filter(info => info.type === 'bank_transfer')
+                    .map((info, index) => (
+                      <div key={index} className="mb-4 last:mb-0">
+                        <div className="bg-white p-3 rounded-lg border">
+                          <p className="font-medium text-blue-600">{info.bankName}</p>
+                          <p className="text-sm">No. Rekening: <span className="font-mono font-bold">{info.accountNumber}</span></p>
+                          <p className="text-sm">Atas Nama: <span className="font-medium">{info.accountName}</span></p>
+                          <p className="text-xs text-gray-600 mt-2">{info.instructions}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

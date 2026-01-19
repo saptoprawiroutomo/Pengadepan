@@ -6,7 +6,10 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['admin', 'kasir', 'customer'], default: 'customer' },
   phone: { type: String },
-  address: { type: String },
+  birthDate: { type: Date },
+  gender: { type: String, enum: ['Laki-laki', 'Perempuan'] },
+  idNumber: { type: String }, // NIK/KTP
+  address: { type: String }, // Alamat KTP
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

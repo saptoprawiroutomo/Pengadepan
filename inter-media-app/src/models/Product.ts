@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema({
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   price: { type: Number, required: true },
   stock: { type: Number, required: true, default: 0 },
+  weight: { type: Number, required: true, default: 0 }, // dalam gram
   images: [{ type: String }],
   description: { type: String },
   isActive: { type: Boolean, default: true },
