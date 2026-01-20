@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             </tr>
         </thead>
         <tbody>
-            ${order.items.map(item => `
+            ${order.items.map((item: any) => `
                 <tr>
                     <td>${item.nameSnapshot}</td>
                     <td>${item.qty}</td>
