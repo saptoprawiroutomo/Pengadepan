@@ -28,9 +28,9 @@ export default function Header() {
             <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} loading="eager" />
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl mx-8">
-            <div className="relative">
+          {/* Search Bar - Hidden on mobile */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Cari produk, kategori, atau brand..."
@@ -92,22 +92,33 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Categories */}
+        {/* Mobile Search Bar */}
+        <div className="md:hidden px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Cari produk..."
+              className="pl-10 pr-4 py-2 w-full rounded-2xl border-border"
+            />
+          </div>
+        </div>
+
+        {/* Categories - Responsive */}
         <div className="py-2 border-t border-border">
-          <div className="flex items-center space-x-6 text-sm">
-            <Link href="/products" className="text-muted-foreground hover:text-primary">
+          <div className="flex items-center space-x-3 md:space-x-6 text-xs md:text-sm overflow-x-auto">
+            <Link href="/products" className="text-muted-foreground hover:text-primary whitespace-nowrap">
               Semua Produk
             </Link>
-            <Link href="/products?category=printer" className="text-muted-foreground hover:text-primary">
+            <Link href="/products?category=printer" className="text-muted-foreground hover:text-primary whitespace-nowrap">
               Printer
             </Link>
-            <Link href="/products?category=fotocopy" className="text-muted-foreground hover:text-primary">
+            <Link href="/products?category=fotocopy" className="text-muted-foreground hover:text-primary whitespace-nowrap">
               Fotocopy
             </Link>
-            <Link href="/products?category=komputer" className="text-muted-foreground hover:text-primary">
+            <Link href="/products?category=komputer" className="text-muted-foreground hover:text-primary whitespace-nowrap">
               Komputer
             </Link>
-            <Link href="/service/request" className="text-secondary hover:text-secondary/80 font-medium">
+            <Link href="/service/request" className="text-secondary hover:text-secondary/80 font-medium whitespace-nowrap">
               Servis
             </Link>
           </div>

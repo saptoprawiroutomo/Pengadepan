@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Inter Medi-A - E-Commerce & Service Center",
   description: "Solusi terpercaya untuk kebutuhan printer, fotocopy, dan komputer Anda",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
 export default function RootLayout({
