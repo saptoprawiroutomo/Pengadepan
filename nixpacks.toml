@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
+
+[phases.install]
+cmds = ['cd inter-media-app && npm ci']
+
+[phases.build]
+cmds = ['cd inter-media-app && npm run build']
+
+[start]
+cmd = 'cd inter-media-app && npm start'
