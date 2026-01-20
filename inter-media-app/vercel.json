@@ -1,7 +1,8 @@
 {
   "version": 2,
   "env": {
-    "NEXTAUTH_URL": "https://inter-media-app.vercel.app",
-    "NEXTAUTH_SECRET": "inter-media-nextauth-secret-2024-production"
+    "NEXTAUTH_URL": "https://inter-media-16xsvvn32-saptos-projects-29b8c876.vercel.app",
+    "NEXTAUTH_SECRET": "inter-media-nextauth-secret-2024-production-key",
+    "MONGODB_URI": "mongodb+srv://intermedia:intermedia123@cluster0.mongodb.net/inter-media-app?retryWrites=true&w=majority"
   }
 }
