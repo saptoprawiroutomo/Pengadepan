@@ -557,6 +557,8 @@ export default function CheckoutPage() {
                           } ${
                             option.type === 'kurir-toko' 
                               ? 'border-green-300 bg-green-50' 
+                              : option.type === 'gosend'
+                              ? 'border-orange-300 bg-orange-50'
                               : ''
                           }`}
                         >
@@ -578,6 +580,11 @@ export default function CheckoutPage() {
                                         🚲 Kurir Toko
                                       </span>
                                     )}
+                                    {option.type === 'gosend' && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                        🏍️ GoSend
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-sm text-gray-600 mb-2">
                                     Estimasi: {option.estimatedDays} hari
@@ -593,6 +600,11 @@ export default function CheckoutPage() {
                                   {option.type === 'kurir-toko' && (
                                     <p className="text-xs text-green-600 font-medium">
                                       Hemat & Cepat
+                                    </p>
+                                  )}
+                                  {option.type === 'gosend' && (
+                                    <p className="text-xs text-orange-600 font-medium">
+                                      Super Cepat
                                     </p>
                                   )}
                                 </div>
@@ -611,6 +623,7 @@ export default function CheckoutPage() {
                           <p className="font-medium mb-1">Informasi Pengiriman:</p>
                           <ul className="text-xs space-y-1">
                             <li>• Kurir Toko: Pengiriman same day untuk area Jakarta & 1 hari untuk Jabodetabek</li>
+                            <li>• GoSend: Pengiriman super cepat 1-12 jam khusus Jabodetabek (max 20kg)</li>
                             <li>• Ekspedisi: Estimasi waktu dapat berubah tergantung kondisi</li>
                             <li>• Barang akan dikemas dengan aman dan rapi</li>
                           </ul>

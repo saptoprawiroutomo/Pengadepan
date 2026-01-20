@@ -77,6 +77,22 @@ const STORE_COURIER_RATES = {
   }
 };
 
+// GoSend untuk Jabodetabek (zona 1 dan 2)
+const GOSEND_RATES = {
+  'GOSEND INSTANT': {
+    zone1: { base: 15000, perKm: 2500, maxKm: 25 }, // Jakarta: 15rb + 2.5rb/km
+    zone2: { base: 20000, perKm: 3000, maxKm: 40 }, // Jabodetabek: 20rb + 3rb/km
+    estimatedDays: { zone1: '1-2 jam', zone2: '2-4 jam' },
+    maxWeight: 20000 // Max 20kg
+  },
+  'GOSEND SAME DAY': {
+    zone1: { base: 12000, perKm: 2000, maxKm: 25 }, // Jakarta: 12rb + 2rb/km
+    zone2: { base: 15000, perKm: 2500, maxKm: 40 }, // Jabodetabek: 15rb + 2.5rb/km
+    estimatedDays: { zone1: '4-8 jam', zone2: '6-12 jam' },
+    maxWeight: 20000 // Max 20kg
+  }
+};
+
 export async function POST(request: NextRequest) {
   try {
     const { totalWeight, destination } = await request.json();
@@ -141,6 +157,31 @@ export async function POST(request: NextRequest) {
         description: `Kurir Toko - ${estimatedDays} - ${zoneInfo.name} (~${estimatedDistance}km)`,
         type: 'kurir-toko'
       });
+    }
+
+    // GoSend untuk zona 1 dan 2 (Jabodetabek) dengan batas berat 20kg
+    if (zone <= 2 && totalWeight <= 20000) {
+      for (const [serviceName, rates] of Object.entries(GOSEND_RATES)) {
+        const zoneRates = rates[`zone${zone}` as keyof typeof rates] as any;
+        const estimatedDays = rates.estimatedDays[`zone${zone}` as keyof typeof rates.estimatedDays];
+        
+        // Estimasi jarak berdasarkan zona
+        const estimatedDistance = zone === 1 ? 8 : 20; // Jakarta: 8km, Jabodetabek: 20km
+        
+        // Pastikan tidak melebihi max km
+        if (estimatedDistance <= zoneRates.maxKm) {
+          const cost = zoneRates.base + (estimatedDistance * zoneRates.perKm);
+          
+          shippingOptions.push({
+            courier: serviceName,
+            service: 'GOSEND',
+            cost,
+            estimatedDays,
+            description: `${serviceName} - ${estimatedDays} - ${zoneInfo.name} (~${estimatedDistance}km)`,
+            type: 'gosend'
+          });
+        }
+      }
     }
 
     // Sort by cost (optimized sort)
