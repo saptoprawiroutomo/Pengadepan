@@ -49,6 +49,8 @@ export default function CategoriesPage() {
 
     fetchCategories();
   }, [session, router]);
+
+  const fetchCategories = async () => {
     try {
       const response = await fetch('/api/admin/categories');
       if (!response.ok) {
@@ -63,10 +65,6 @@ export default function CategoriesPage() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const onSubmit = async (data: CategoryForm) => {
     try {
