@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
-import Category from '@/models/Category';
+import User from '@/models/User';
 
 export async function GET() {
   try {
@@ -12,12 +12,12 @@ export async function GET() {
     }
 
     await connectDB();
-    const categories = await Category.find({}).sort({ name: 1 });
+    const users = await User.find({}, '-passwordHash').sort({ createdAt: -1 });
     
-    return NextResponse.json(categories);
+    return NextResponse.json(users);
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    console.error('Error fetching users:', error);
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
 
@@ -28,14 +28,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, slug } = await request.json();
+    const { email, name, role, isActive } = await request.json();
 
     await connectDB();
-    const category = await Category.create({ name, slug });
+    const user = await User.create({ 
+      email, 
+      name, 
+      role, 
+      isActive: isActive ?? true 
+    });
     
-    return NextResponse.json(category);
+    return NextResponse.json({ ...user.toObject(), passwordHash: undefined });
   } catch (error: any) {
-    console.error('Error creating category:', error);
+    console.error('Error creating user:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
