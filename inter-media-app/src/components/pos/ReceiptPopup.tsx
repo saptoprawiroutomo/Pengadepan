@@ -33,49 +33,131 @@ interface ReceiptPopupProps {
 
 export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPopupProps) {
   const handlePrint = () => {
-    const printContent = document.getElementById('receipt-content');
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Receipt - ${receiptData?.transactionCode}</title>
-              <style>
+    if (!receiptData) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt - ${receiptData.transactionCode}</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { 
+                font-family: 'Courier New', monospace; 
+                font-size: 11px; 
+                line-height: 1.2;
+                width: 58mm;
+                margin: 0 auto;
+                padding: 5mm;
+              }
+              .receipt { width: 100%; }
+              .center { text-align: center; }
+              .left { text-align: left; }
+              .right { text-align: right; }
+              .bold { font-weight: bold; }
+              .line { 
+                border-bottom: 1px dashed #000; 
+                margin: 3px 0; 
+                height: 1px;
+              }
+              .row { 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 1px 0;
+              }
+              .item-name { 
+                width: 100%; 
+                margin-bottom: 1px;
+              }
+              .item-detail { 
+                display: flex; 
+                justify-content: space-between;
+                font-size: 10px;
+              }
+              .total-row { 
+                font-weight: bold; 
+                font-size: 12px;
+                margin-top: 3px;
+              }
+              .footer { 
+                margin-top: 5px; 
+                font-size: 9px;
+              }
+              @media print {
                 body { 
-                  font-family: 'Courier New', monospace; 
-                  font-size: 12px; 
-                  margin: 20px; 
-                  line-height: 1.4;
+                  margin: 0; 
+                  padding: 2mm;
+                  width: 58mm;
                 }
-                .receipt { max-width: 300px; margin: 0 auto; }
-                .center { text-align: center; }
-                .line { border-bottom: 1px dashed #000; margin: 10px 0; }
-                .item-row { 
-                  display: flex; 
-                  justify-content: space-between; 
-                  margin: 2px 0; 
+                @page { 
+                  size: 58mm auto; 
+                  margin: 0; 
                 }
-                .total { font-weight: bold; font-size: 14px; }
-                @media print {
-                  body { margin: 0; }
-                  .receipt { max-width: none; }
-                }
-              </style>
-            </head>
-            <body>
-              ${printContent.innerHTML}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        
-        // Wait for content to load then print
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
-      }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="receipt">
+              <div class="center bold" style="font-size: 12px; margin-bottom: 2px;">
+                ${receiptData.storeName}
+              </div>
+              <div class="center" style="font-size: 9px; margin-bottom: 1px;">
+                ${receiptData.storeAddress.replace(/\n/g, '<br>')}
+              </div>
+              <div class="center" style="font-size: 9px; margin-bottom: 3px;">
+                ${receiptData.storePhone}
+              </div>
+              
+              <div class="line"></div>
+              
+              <div class="row" style="font-size: 9px;">
+                <span>No: ${receiptData.transactionCode}</span>
+                <span>${receiptData.date}</span>
+              </div>
+              <div class="row" style="font-size: 9px;">
+                <span>Kasir: ${receiptData.cashier}</span>
+                <span>${receiptData.time}</span>
+              </div>
+              <div style="font-size: 9px; margin-bottom: 3px;">
+                Pembeli: ${receiptData.customerName}
+              </div>
+              
+              <div class="line"></div>
+              
+              ${receiptData.items.map(item => `
+                <div class="item-name">${item.name}</div>
+                <div class="item-detail">
+                  <span>${item.qty} x Rp ${item.price.toLocaleString('id-ID')}</span>
+                  <span>Rp ${item.subtotal.toLocaleString('id-ID')}</span>
+                </div>
+              `).join('')}
+              
+              <div class="line"></div>
+              
+              <div class="row total-row">
+                <span>TOTAL:</span>
+                <span>Rp ${receiptData.total.toLocaleString('id-ID')}</span>
+              </div>
+              
+              <div class="line"></div>
+              
+              <div class="center footer">
+                <div style="margin: 2px 0;">Terima kasih atas kunjungan Anda!</div>
+                <div style="margin: 2px 0;">Barang yang sudah dibeli</div>
+                <div style="margin: 2px 0;">tidak dapat dikembalikan</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
     }
   };
 
