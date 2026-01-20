@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const itemIndex = cart.items.findIndex(
-      item => item.productId.toString() === productId
+      (item: any) => item.productId.toString() === productId
     );
 
     if (itemIndex === -1) {
@@ -58,7 +58,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     cart.items = cart.items.filter(
-      item => item.productId.toString() !== productId
+      (item: any) => item.productId.toString() !== productId
     );
 
     await cart.save();
