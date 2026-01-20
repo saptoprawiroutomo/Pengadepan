@@ -92,7 +92,7 @@ export default function CheckoutPage() {
         const defaultAddress = data.addresses?.find((addr: any) => addr.isDefault);
         if (defaultAddress) {
           fillAddressForm(defaultAddress);
-        } else if (session?.user?.address) {
+        } else if ((session?.user as any)?.address) {
           // Use KTP address as fallback
           setUseKtpAddress(true);
           fillKtpAddress();
@@ -121,12 +121,12 @@ export default function CheckoutPage() {
     if (session?.user) {
       setShippingAddress({
         receiverName: session.user.name || '',
-        phone: session.user.phone || '',
+        phone: (session.user as any).phone || '',
         province: 'DKI Jakarta', // Default, user can change
         city: 'Jakarta Pusat', // Default, user can change
         district: '',
         postalCode: '',
-        fullAddress: session.user.address || '',
+        fullAddress: (session.user as any).address || '',
         addressLabel: 'KTP'
       });
       setSelectedCity('Jakarta Pusat');
