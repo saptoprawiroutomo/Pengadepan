@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+      <section className="relative bg-gradient-to-r from-green-600 to-green-800 text-white py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
@@ -22,13 +22,13 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/products">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 w-full sm:w-auto">
+                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 w-full sm:w-auto">
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Lihat Produk
                 </Button>
               </Link>
               <Link href="/service-request">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 w-full sm:w-auto">
+                <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-600 w-full sm:w-auto">
                   <Wrench className="mr-2 h-5 w-5" />
                   Service Center
                 </Button>
@@ -61,7 +61,7 @@ export default function HomePage() {
                   Printer inkjet, laser, dan dot matrix untuk berbagai kebutuhan
                 </p>
                 <Link href="/products?category=printer">
-                  <Button variant="outline" size="sm">Lihat Printer</Button>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white" size="sm">Lihat Printer</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -76,7 +76,7 @@ export default function HomePage() {
                   Mesin fotocopy digital dan analog untuk kantor dan usaha
                 </p>
                 <Link href="/products?category=fotocopy">
-                  <Button variant="outline" size="sm">Lihat Fotocopy</Button>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white" size="sm">Lihat Fotocopy</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -91,7 +91,7 @@ export default function HomePage() {
                   PC desktop, laptop, dan aksesoris komputer lengkap
                 </p>
                 <Link href="/products?category=komputer">
-                  <Button variant="outline" size="sm">Lihat Komputer</Button>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white" size="sm">Lihat Komputer</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -99,7 +99,7 @@ export default function HomePage() {
 
           <div className="text-center">
             <Link href="/products">
-              <Button size="lg">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
                 Lihat Semua Produk
               </Button>
             </Link>
@@ -155,7 +155,7 @@ export default function HomePage() {
 
           <div className="text-center mt-12">
             <Link href="/service-request">
-              <Button size="lg" variant="outline">
+              <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
                 <Wrench className="mr-2 h-5 w-5" />
                 Request Service
               </Button>
@@ -249,12 +249,12 @@ export default function HomePage() {
             <div className="text-center mt-12">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/login">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto">
                     Masuk ke Akun
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto">
+                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto">
                     Daftar Sekarang
                   </Button>
                 </Link>
