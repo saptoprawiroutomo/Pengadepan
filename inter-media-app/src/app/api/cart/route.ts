@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Check if product already in cart
     const existingItemIndex = cart.items.findIndex(
-      item => item.productId.toString() === productId
+      (item: any) => item.productId.toString() === productId
     );
 
     if (existingItemIndex >= 0) {

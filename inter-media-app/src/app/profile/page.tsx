@@ -65,11 +65,11 @@ export default function ProfilePage() {
     // Initialize profile form with session data
     setProfileForm({
       name: session.user?.name || '',
-      phone: session.user?.phone || '',
-      birthDate: session.user?.birthDate || '',
-      gender: session.user?.gender || '',
-      idNumber: session.user?.idNumber || '',
-      address: session.user?.address || ''
+      phone: (session.user as any)?.phone || '',
+      birthDate: (session.user as any)?.birthDate || '',
+      gender: (session.user as any)?.gender || '',
+      idNumber: (session.user as any)?.idNumber || '',
+      address: (session.user as any)?.address || ''
     });
     
     fetchAddresses();
@@ -336,13 +336,13 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Nomor Telepon</Label>
-                  <Input value={session.user?.phone || '-'} disabled className="rounded-2xl" />
+                  <Input value={(session.user as any)?.phone || '-'} disabled className="rounded-2xl" />
                 </div>
                 <div>
                   <Label>Tanggal Lahir</Label>
                   <Input 
-                    value={session.user?.birthDate ? 
-                      new Date(session.user.birthDate).toLocaleDateString('id-ID') : '-'
+                    value={(session.user as any)?.birthDate ? 
+                      new Date((session.user as any).birthDate).toLocaleDateString('id-ID') : '-'
                     } 
                     disabled 
                     className="rounded-2xl" 
@@ -353,13 +353,13 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Jenis Kelamin</Label>
-                  <Input value={session.user?.gender || '-'} disabled className="rounded-2xl" />
+                  <Input value={(session.user as any)?.gender || '-'} disabled className="rounded-2xl" />
                 </div>
                 <div>
                   <Label>Nomor KTP/NIK</Label>
                   <Input 
-                    value={session.user?.idNumber ? 
-                      session.user.idNumber.replace(/(\d{4})(\d{4})(\d{4})(\d{4})/, '$1-$2-$3-$4') : '-'
+                    value={(session.user as any)?.idNumber ? 
+                      (session.user as any).idNumber.replace(/(\d{4})(\d{4})(\d{4})(\d{4})/, '$1-$2-$3-$4') : '-'
                     } 
                     disabled 
                     className="rounded-2xl" 
@@ -370,7 +370,7 @@ export default function ProfilePage() {
               <div>
                 <Label>Alamat KTP</Label>
                 <Textarea 
-                  value={session.user?.address || '-'} 
+                  value={(session.user as any)?.address || '-'} 
                   disabled 
                   className="rounded-2xl" 
                   rows={2}

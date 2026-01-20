@@ -96,7 +96,6 @@ const authOptions = {
       }
       
       return trustedDomain;
-      return currentDomain;
     }
   },
   pages: {

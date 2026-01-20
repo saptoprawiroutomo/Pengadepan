@@ -254,7 +254,8 @@ export default function AdminOrdersPage() {
                                   className="w-full max-h-96 object-contain rounded-lg border"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
-                                    e.currentTarget.nextElementSibling!.style.display = 'block';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) nextElement.style.display = 'block';
                                   }}
                                 />
                                 <div style={{display: 'none'}} className="text-center p-8 text-muted-foreground">

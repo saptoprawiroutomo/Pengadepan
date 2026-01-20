@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth';
 import connectDB from '@/lib/db';
 import Cart from '@/models/Cart';
 
-export async function PUT(request: NextRequest, { params }: { params: { productId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
   try {
+    const { productId } = await params;
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -20,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: { productI
     }
 
     const itemIndex = cart.items.findIndex(
-      item => item.productId.toString() === params.productId
+      (item: any) => item.productId.toString() === productId
     );
 
     if (itemIndex === -1) {
@@ -41,8 +42,9 @@ export async function PUT(request: NextRequest, { params }: { params: { productI
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { productId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
   try {
+    const { productId } = await params;
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -56,7 +58,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { produ
     }
 
     cart.items = cart.items.filter(
-      item => item.productId.toString() !== params.productId
+      (item: any) => item.productId.toString() !== productId
     );
 
     await cart.save();

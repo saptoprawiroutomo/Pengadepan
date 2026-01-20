@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
         const defaultAddress = data.addresses?.find((addr: any) => addr.isDefault);
         if (defaultAddress) {
           fillAddressForm(defaultAddress);
-        } else if (session?.user?.address) {
+        } else if ((session?.user as any)?.address) {
           // Use KTP address as fallback
           setUseKtpAddress(true);
           fillKtpAddress();
@@ -121,12 +122,12 @@ export default function CheckoutPage() {
     if (session?.user) {
       setShippingAddress({
         receiverName: session.user.name || '',
-        phone: session.user.phone || '',
+        phone: (session.user as any).phone || '',
         province: 'DKI Jakarta', // Default, user can change
         city: 'Jakarta Pusat', // Default, user can change
         district: '',
         postalCode: '',
-        fullAddress: session.user.address || '',
+        fullAddress: (session.user as any).address || '',
         addressLabel: 'KTP'
       });
       setSelectedCity('Jakarta Pusat');
@@ -342,7 +343,7 @@ export default function CheckoutPage() {
                 )}
 
                 {/* KTP Address Option */}
-                {session?.user?.address && (
+                {(session?.user as any)?.address && (
                   <div className="space-y-2">
                     <Label>Alamat KTP</Label>
                     <div 
@@ -356,8 +357,8 @@ export default function CheckoutPage() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">{session.user.name} - {session.user.phone || 'No phone'}</p>
-                          <p className="text-sm text-muted-foreground">{session.user.address}</p>
+                          <p className="font-medium">{session.user.name} - {(session.user as any).phone || 'No phone'}</p>
+                          <p className="text-sm text-muted-foreground">{(session.user as any).address}</p>
                         </div>
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           KTP
