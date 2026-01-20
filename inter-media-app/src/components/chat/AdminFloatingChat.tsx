@@ -129,6 +129,30 @@ export default function AdminFloatingChat() {
     setShowRoomList(false);
     setMessages([]);
     loadMessages(room.userId);
+    
+    // Mark messages as read when room is selected
+    markAsRead(room.userId);
+  };
+
+  const markAsRead = async (userId: string) => {
+    try {
+      await fetch('/api/admin/chat/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      
+      // Update room list to remove unread count
+      setChatRooms(prev => 
+        prev.map(room => 
+          room.userId === userId 
+            ? { ...room, unreadCount: 0 }
+            : room
+        )
+      );
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
   };
 
   const backToRoomList = () => {
@@ -154,7 +178,7 @@ export default function AdminFloatingChat() {
           )}
         </Button>
       ) : (
-        <Card className="w-80 h-96 shadow-xl flex flex-col">
+        <Card className="w-80 h-96 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
             <CardTitle className="text-sm font-medium">
               {showRoomList ? 'Chat Support' : 
@@ -180,109 +204,107 @@ export default function AdminFloatingChat() {
             </div>
           </CardHeader>
           
-          <CardContent className="flex-1 flex flex-col p-0">
-            {showRoomList ? (
-              /* Room List */
-              <div className="flex-1 overflow-y-auto p-4">
-                {chatRooms.length === 0 ? (
-                  <div className="text-center text-sm text-muted-foreground py-8">
-                    <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Belum ada percakapan</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {chatRooms.map((room) => (
-                      <div
-                        key={room.userId}
-                        onClick={() => selectRoom(room)}
-                        className="p-3 cursor-pointer hover:bg-muted/50 rounded-lg border transition-colors"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <div>
-                              <p className="font-medium text-sm">{room.userName}</p>
-                              <p className="text-xs text-muted-foreground truncate max-w-[180px]">
-                                {room.lastMessage}
-                              </p>
-                            </div>
-                          </div>
-                          {room.unreadCount > 0 && (
-                            <Badge variant="destructive" className="text-xs h-5">
-                              {room.unreadCount}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Chat Messages */
-              <>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {messages.map((message) => (
+          {showRoomList ? (
+            /* Room List */
+            <div className="h-80 overflow-y-auto p-4">
+              {chatRooms.length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground py-8">
+                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Belum ada percakapan</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {chatRooms.map((room) => (
                     <div
-                      key={message._id}
-                      className={`flex ${message.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
+                      key={room.userId}
+                      onClick={() => selectRoom(room)}
+                      className="p-3 cursor-pointer hover:bg-muted/50 rounded-lg border transition-colors"
                     >
-                      <div
-                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                          message.sender === 'admin'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 mb-1">
-                          {message.sender === 'admin' ? (
-                            <Headphones className="h-3 w-3" />
-                          ) : (
-                            <User className="h-3 w-3" />
-                          )}
-                          <span className="text-xs opacity-70">
-                            {message.senderName}
-                          </span>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium text-sm">{room.userName}</p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                              {room.lastMessage}
+                            </p>
+                          </div>
                         </div>
-                        <p>{message.message}</p>
-                        <p className="text-xs opacity-50 mt-1">
-                          {new Date(message.createdAt).toLocaleTimeString('id-ID', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                        {room.unreadCount > 0 && (
+                          <Badge variant="destructive" className="text-xs h-5">
+                            {room.unreadCount}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))}
-                  <div ref={messagesEndRef} />
                 </div>
-
-                <div className="border-t p-3">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Ketik balasan..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                      className="flex-1 text-sm"
-                    />
-                    <Button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim()}
-                      size="sm"
+              )}
+            </div>
+          ) : (
+            /* Chat Messages */
+            <>
+              <div className="h-64 overflow-y-auto p-4 space-y-3">
+                {messages.map((message) => (
+                  <div
+                    key={message._id}
+                    className={`flex ${message.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${
+                        message.sender === 'admin'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
                     >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                      <div className="flex items-center gap-1 mb-1">
+                        {message.sender === 'admin' ? (
+                          <Headphones className="h-3 w-3" />
+                        ) : (
+                          <User className="h-3 w-3" />
+                        )}
+                        <span className="text-xs opacity-70">
+                          {message.senderName}
+                        </span>
+                      </div>
+                      <p className="break-words">{message.message}</p>
+                      <p className="text-xs opacity-50 mt-1">
+                        {new Date(message.createdAt).toLocaleTimeString('id-ID', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
                   </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="border-t p-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Ketik balasan..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    className="flex-1 text-sm"
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    size="sm"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
-              </>
-            )}
-          </CardContent>
+              </div>
+            </>
+          )}
         </Card>
       )}
     </div>

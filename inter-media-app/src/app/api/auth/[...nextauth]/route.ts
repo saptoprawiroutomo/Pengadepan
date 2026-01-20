@@ -5,6 +5,7 @@ import User from '@/models/User';
 import { verifyPassword } from '@/lib/utils-server';
 
 const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
