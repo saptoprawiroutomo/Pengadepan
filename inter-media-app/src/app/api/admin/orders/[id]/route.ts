@@ -23,8 +23,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { status } = await request.json();
-    console.log('Updating order status to:', status);
+    const updateData = await request.json();
+    console.log('Updating order with data:', updateData);
 
     await connectDB();
     
@@ -35,7 +35,7 @@ export async function PUT(request: NextRequest) {
     
     const order = await Order.findByIdAndUpdate(
       id,
-      { status },
+      updateData,
       { new: true }
     );
     

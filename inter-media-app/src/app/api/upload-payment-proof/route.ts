@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       { 
         paymentProof,
         paymentProofUploadedAt: new Date(),
-        status: 'paid'
+        // Status tetap 'pending' - menunggu verifikasi admin
+        adminNotes: 'Bukti pembayaran telah diupload, menunggu verifikasi admin'
       },
       { new: true }
     );

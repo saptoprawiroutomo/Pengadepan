@@ -292,12 +292,56 @@ export default function AdminOrdersPage() {
                           <span className="text-xs text-muted-foreground">Menunggu bukti bayar</span>
                         )}
                         
-                        {order.status === 'pending' && (order.paymentMethod === 'cod' || order.paymentProof) && (
+                        {/* Verifikasi Pembayaran - untuk order dengan bukti bayar yang belum diverifikasi */}
+                        {order.status === 'pending' && order.paymentMethod === 'transfer' && order.paymentProof && (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => updateOrderStatus(order._id, 'paid')}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              ✓ Verifikasi Bayar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const reason = prompt('Alasan penolakan:');
+                                if (reason) {
+                                  // Update dengan admin notes
+                                  fetch(`/api/admin/orders/${order._id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ 
+                                      adminNotes: `Bukti pembayaran ditolak: ${reason}`,
+                                      paymentProof: null,
+                                      paymentProofUploadedAt: null
+                                    }),
+                                  }).then(() => fetchOrders());
+                                }
+                              }}
+                              className="text-red-600 border-red-300 hover:bg-red-50"
+                            >
+                              ✗ Tolak
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {order.status === 'paid' && (
                           <Button
                             size="sm"
                             onClick={() => updateOrderStatus(order._id, 'processed')}
                           >
-                            Proses
+                            Proses Pesanan
+                          </Button>
+                        )}
+                        
+                        {order.status === 'pending' && order.paymentMethod === 'cod' && (
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order._id, 'processed')}
+                          >
+                            Proses COD
                           </Button>
                         )}
                         
