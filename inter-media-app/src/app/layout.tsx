@@ -11,7 +11,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Inter Medi-A - E-Commerce & Service Center",
   description: "Solusi terpercaya untuk kebutuhan printer, fotocopy, dan komputer Anda",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -20,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" data-scroll-behavior="smooth">
       <body className={inter.className}>
         <Providers>
           <Header />
