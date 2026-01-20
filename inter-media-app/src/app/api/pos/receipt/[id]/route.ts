@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
 
 const ReceiptDocument = ({ transaction }: { transaction: any }) => (
   <Document>
-    <Page size="A5" style={styles.page}>
+    <Page size={'A5'} style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>INTER MEDI-A</Text>
         <Text style={styles.subtitle}>Struk Penjualan</Text>

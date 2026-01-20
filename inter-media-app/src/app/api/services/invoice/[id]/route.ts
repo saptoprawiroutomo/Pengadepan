@@ -88,7 +88,7 @@ const statusLabels = {
 
 const InvoiceDocument = ({ service }: { service: any }) => (
   <Document>
-    <Page size="A4" style={styles.page}>
+    <Page size={'A4'} style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>INTER MEDI-A</Text>
         <Text style={styles.subtitle}>Invoice Servis</Text>

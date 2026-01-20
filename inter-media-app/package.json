@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "concurrently \"node socket-server.js\" \"next dev\"",
     "build": "next build",
-    "start": "concurrently \"node socket-server.js\" \"next start\"",
+    "start": "next start",
+    "start:dev": "concurrently \"node socket-server.js\" \"next start\"",
     "lint": "eslint"
   },
   "dependencies": {

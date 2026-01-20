@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "env": {
+    "NEXTAUTH_URL": "https://inter-media-app.vercel.app",
+    "NEXTAUTH_SECRET": "inter-media-nextauth-secret-2024-production",
+    "MONGODB_URI": "mongodb://localhost:27017/inter-media-app"
+  }
+}
