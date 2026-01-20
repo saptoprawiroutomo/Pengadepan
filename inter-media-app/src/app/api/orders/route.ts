@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         productId: product._id,
         nameSnapshot: product.name,
         priceSnapshot: cartItem.priceSnapshot,
+        weightSnapshot: product.weight || 1000, // Default 1000g jika tidak ada weight
         qty: cartItem.qty,
         subtotal
       });
