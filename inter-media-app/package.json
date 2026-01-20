@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "start:dev": "concurrently \"node socket-server.js\" \"next start\"",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postbuild": "echo 'Build completed successfully'"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
