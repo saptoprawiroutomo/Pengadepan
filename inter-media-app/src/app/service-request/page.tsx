@@ -193,8 +193,10 @@ export default function ServiceRequestPage() {
             <MapPin className="h-8 w-8 mx-auto mb-2 text-primary" />
             <h3 className="font-medium mb-1">Kunjungi Toko</h3>
             <p className="text-sm text-muted-foreground mb-2">Bawa perangkat langsung</p>
-            <Button variant="outline" size="sm" className="rounded-2xl">
-              Lihat Lokasi
+            <Button variant="outline" size="sm" className="rounded-2xl" asChild>
+              <a href="https://maps.google.com/?q=Inter+Media+Printer+Fotocopy+Computer+Jakarta" target="_blank" rel="noopener noreferrer">
+                📍 Lihat Lokasi
+              </a>
             </Button>
           </CardContent>
         </Card>
