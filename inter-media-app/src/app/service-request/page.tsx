@@ -9,12 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wrench, Phone, MapPin } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Wrench, Phone, MapPin, CheckCircle, XCircle } from 'lucide-react';
 
 export default function ServiceRequestPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     deviceType: '',
     complaint: '',
@@ -36,7 +40,7 @@ export default function ServiceRequestPage() {
       });
 
       if (response.ok) {
-        alert('Request service berhasil dikirim! Tim kami akan menghubungi Anda segera.');
+        setShowSuccessModal(true);
         setFormData({
           deviceType: '',
           complaint: '',
@@ -46,11 +50,13 @@ export default function ServiceRequestPage() {
           preferredTime: ''
         });
       } else {
-        alert('Gagal mengirim request. Silakan coba lagi.');
+        setErrorMessage('Gagal mengirim request. Silakan coba lagi.');
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      setErrorMessage('Terjadi kesalahan. Silakan coba lagi.');
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -206,6 +212,66 @@ export default function ServiceRequestPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="h-6 w-6 text-green-500" />
+              <DialogTitle className="text-green-700">Request Berhasil Dikirim!</DialogTitle>
+            </div>
+            <DialogDescription className="text-center py-4">
+              <div className="space-y-3">
+                <p className="text-base">
+                  Tim kami akan menghubungi Anda segera untuk mengatur jadwal service.
+                </p>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-sm text-green-700">
+                    📞 Kami akan menghubungi dalam 1-2 jam kerja<br/>
+                    🔧 Tim teknisi siap membantu<br/>
+                    📍 Service bisa di tempat atau di toko
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-4">
+            <Button onClick={() => setShowSuccessModal(false)} className="w-full">
+              Tutup
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <XCircle className="h-6 w-6 text-red-500" />
+              <DialogTitle className="text-red-700">Gagal Mengirim Request</DialogTitle>
+            </div>
+            <DialogDescription className="text-center py-4">
+              <div className="space-y-3">
+                <p className="text-base">{errorMessage}</p>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    Silakan coba lagi atau hubungi kami langsung:<br/>
+                    📞 (021) 1234-5678<br/>
+                    📱 WhatsApp: 0812-3456-7890
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-4">
+            <Button onClick={() => setShowErrorModal(false)} variant="outline" className="w-full">
+              Tutup
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
