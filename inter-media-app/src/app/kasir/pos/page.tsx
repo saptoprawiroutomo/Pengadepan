@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Minus, Trash2, ShoppingCart, Printer } from 'lucide-react';
+import ReceiptPopup from '@/components/pos/ReceiptPopup';
 
 interface Product {
   _id: string;
@@ -34,6 +35,8 @@ export default function POSPage() {
   const [items, setItems] = useState<POSItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
 
   useEffect(() => {
     if (!session) return;
@@ -161,14 +164,12 @@ export default function POSPage() {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Transaksi berhasil!');
-        
-        // Print receipt
-        const printWindow = window.open(`/api/pos/receipt/${result.transaction._id}`, '_blank');
-        if (printWindow) {
-          printWindow.onload = () => {
-            printWindow.print();
-          };
+        // Fetch receipt data
+        const receiptResponse = await fetch(`/api/pos/receipt/${result.transaction._id}`);
+        if (receiptResponse.ok) {
+          const receiptData = await receiptResponse.json();
+          setReceiptData(receiptData);
+          setShowReceipt(true);
         }
         
         // Reset form
@@ -339,6 +340,13 @@ export default function POSPage() {
           </Button>
         </div>
       )}
+
+      {/* Receipt Popup */}
+      <ReceiptPopup
+        isOpen={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        receiptData={receiptData}
+      />
     </div>
   );
 }
