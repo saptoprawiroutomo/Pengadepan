@@ -70,9 +70,14 @@ export default function Header() {
                     <Link href="/orders">Pesanan Saya</Link>
                   </DropdownMenuItem>
                   {session.user.role === 'admin' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">Admin Panel</Link>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin">Admin Panel</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/chat">Chat Support</Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {['admin', 'kasir'].includes(session.user.role) && (
                     <DropdownMenuItem asChild>
