@@ -69,15 +69,32 @@ const authOptions = {
     },
     async redirect({ url, baseUrl }: any) {
       console.log('Redirect callback - url:', url, 'baseUrl:', baseUrl);
-      // Force redirect to current domain
-      const currentDomain = process.env.NEXTAUTH_URL || baseUrl;
       
-      // Redirect setelah logout ke home
-      if (url.includes('/api/auth/signout') || url.includes('callbackUrl')) {
-        return currentDomain;
+      // Always use the configured NEXTAUTH_URL
+      const trustedDomain = process.env.NEXTAUTH_URL || baseUrl;
+      
+      // Handle logout
+      if (url.includes('/api/auth/signout')) {
+        return trustedDomain;
       }
-      // Redirect setelah login
-      if (url.startsWith('/')) return `${currentDomain}${url}`;
+      
+      // Handle relative URLs
+      if (url.startsWith('/')) {
+        return `${trustedDomain}${url}`;
+      }
+      
+      // Handle absolute URLs - only allow same domain
+      try {
+        const urlObj = new URL(url);
+        const trustedObj = new URL(trustedDomain);
+        if (urlObj.hostname === trustedObj.hostname) {
+          return url;
+        }
+      } catch (e) {
+        // Invalid URL, fallback to trusted domain
+      }
+      
+      return trustedDomain;
       return currentDomain;
     }
   },
@@ -88,6 +105,18 @@ const authOptions = {
   session: {
     strategy: 'jwt' as const,
   },
+  cookies: {
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true
+      }
+    }
+  },
+  trustHost: true,
 };
 
 const handler = NextAuth(authOptions);
