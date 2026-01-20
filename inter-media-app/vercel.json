@@ -1,8 +1,6 @@
 {
-  "version": 2,
-  "env": {
-    "NEXTAUTH_URL": "https://inter-media-app.vercel.app",
-    "NEXTAUTH_SECRET": "inter-media-nextauth-secret-2024-production-key",
-    "MONGODB_URI": "mongodb+srv://saptoprawiroutomo_db_user:1234qwer@cluster0.z3wyzso.mongodb.net/inter-media-app?retryWrites=true&w=majority&appName=Cluster0"
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm ci",
+  "framework": "nextjs"
 }
