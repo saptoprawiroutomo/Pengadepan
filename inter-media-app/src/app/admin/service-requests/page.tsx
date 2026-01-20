@@ -32,10 +32,16 @@ export default function AdminServiceRequestsPage() {
 
   const fetchRequests = async () => {
     try {
+      console.log('Fetching service requests...');
       const response = await fetch('/api/service-requests');
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Service requests data:', data);
         setRequests(data.requests || []);
+      } else {
+        console.error('Failed to fetch requests:', response.status);
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -46,14 +52,22 @@ export default function AdminServiceRequestsPage() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
+      console.log('Updating status:', id, status);
       const response = await fetch(`/api/service-requests/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
 
+      console.log('Update response status:', response.status);
+      
       if (response.ok) {
+        console.log('Status updated successfully');
         fetchRequests();
+      } else {
+        console.error('Failed to update status:', response.status);
+        const errorData = await response.json();
+        console.error('Error data:', errorData);
       }
     } catch (error) {
       console.error('Error updating status:', error);
