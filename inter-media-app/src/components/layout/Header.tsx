@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Search, ShoppingCart, User, Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +24,12 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} loading="eager" />
+            <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto">
+              <rect x="8" y="8" width="24" height="24" rx="4" fill="#D32F2F"/>
+              <text x="12" y="26" fill="white" fontFamily="Inter" fontWeight="bold" fontSize="14">IM</text>
+              <text x="40" y="16" fill="#1565C0" fontFamily="Inter" fontWeight="600" fontSize="12">Inter</text>
+              <text x="40" y="28" fill="#1565C0" fontFamily="Inter" fontWeight="600" fontSize="12">Medi-A</text>
+            </svg>
           </Link>
 
           {/* Search Bar - Hidden on mobile */}

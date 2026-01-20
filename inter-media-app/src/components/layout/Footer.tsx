@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mb-4" />
+            <img src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mb-4 h-10 w-auto" />
             <p className="text-muted-foreground text-sm">
               Solusi terpercaya untuk kebutuhan printer, fotocopy, dan komputer Anda.
             </p>

@@ -53,7 +53,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md rounded-2xl">
         <CardHeader className="text-center">
-          <Image src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mx-auto mb-4" />
+          <img src="/logo-im.svg" alt="Inter Medi-A" width={120} height={40} className="mx-auto mb-4 h-10 w-auto" />
           <CardTitle className="text-2xl">Daftar Akun Baru</CardTitle>
         </CardHeader>
         <CardContent>
