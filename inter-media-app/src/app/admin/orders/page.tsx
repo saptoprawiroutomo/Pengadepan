@@ -276,17 +276,6 @@ export default function AdminOrdersPage() {
                     <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {/* View Payment Proof for Transfer */}
-                        {order.paymentMethod === 'transfer' && order.paymentProof && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(order.paymentProof, '_blank')}
-                          >
-                            Bukti Bayar
-                          </Button>
-                        )}
-                        
                         {/* Status Actions */}
                         {order.status === 'pending' && order.paymentMethod === 'transfer' && !order.paymentProof && (
                           <span className="text-xs text-muted-foreground">Menunggu bukti bayar</span>
