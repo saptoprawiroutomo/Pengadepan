@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY inter-media-app/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy application code
 COPY inter-media-app/ ./
