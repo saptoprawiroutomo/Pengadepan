@@ -468,7 +468,7 @@ export default function ProfilePage() {
                       <div>
                         <Label>Provinsi</Label>
                         <Select value={addressForm.province} onValueChange={(value) => 
-                          setAddressForm({...addressForm, province: value})
+                          setAddressForm({...addressForm, province: value, city: ''}) // Reset city when province changes
                         }>
                           <SelectTrigger className="rounded-2xl">
                             <SelectValue placeholder="Pilih provinsi" />
@@ -478,23 +478,97 @@ export default function ProfilePage() {
                             <SelectItem value="Jawa Barat">Jawa Barat</SelectItem>
                             <SelectItem value="Jawa Tengah">Jawa Tengah</SelectItem>
                             <SelectItem value="Jawa Timur">Jawa Timur</SelectItem>
+                            <SelectItem value="Banten">Banten</SelectItem>
+                            <SelectItem value="Yogyakarta">D.I. Yogyakarta</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label>Kota</Label>
-                        <Select value={addressForm.city} onValueChange={(value) => 
-                          setAddressForm({...addressForm, city: value})
-                        }>
+                        <Select 
+                          value={addressForm.city} 
+                          onValueChange={(value) => setAddressForm({...addressForm, city: value})}
+                          disabled={!addressForm.province}
+                        >
                           <SelectTrigger className="rounded-2xl">
-                            <SelectValue placeholder="Pilih kota" />
+                            <SelectValue placeholder={addressForm.province ? "Pilih kota" : "Pilih provinsi dulu"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Jakarta Pusat">Jakarta Pusat</SelectItem>
-                            <SelectItem value="Jakarta Utara">Jakarta Utara</SelectItem>
-                            <SelectItem value="Jakarta Selatan">Jakarta Selatan</SelectItem>
-                            <SelectItem value="Bandung">Bandung</SelectItem>
-                            <SelectItem value="Surabaya">Surabaya</SelectItem>
+                            {/* DKI Jakarta */}
+                            {addressForm.province === 'DKI Jakarta' && (
+                              <>
+                                <SelectItem value="Jakarta Pusat">Jakarta Pusat</SelectItem>
+                                <SelectItem value="Jakarta Utara">Jakarta Utara</SelectItem>
+                                <SelectItem value="Jakarta Selatan">Jakarta Selatan</SelectItem>
+                                <SelectItem value="Jakarta Barat">Jakarta Barat</SelectItem>
+                                <SelectItem value="Jakarta Timur">Jakarta Timur</SelectItem>
+                                <SelectItem value="Kepulauan Seribu">Kepulauan Seribu</SelectItem>
+                              </>
+                            )}
+                            
+                            {/* Jawa Barat */}
+                            {addressForm.province === 'Jawa Barat' && (
+                              <>
+                                <SelectItem value="Bandung">Bandung</SelectItem>
+                                <SelectItem value="Bekasi">Bekasi</SelectItem>
+                                <SelectItem value="Bogor">Bogor</SelectItem>
+                                <SelectItem value="Depok">Depok</SelectItem>
+                                <SelectItem value="Cimahi">Cimahi</SelectItem>
+                                <SelectItem value="Tasikmalaya">Tasikmalaya</SelectItem>
+                                <SelectItem value="Banjar">Banjar</SelectItem>
+                                <SelectItem value="Sukabumi">Sukabumi</SelectItem>
+                                <SelectItem value="Cirebon">Cirebon</SelectItem>
+                              </>
+                            )}
+                            
+                            {/* Jawa Tengah */}
+                            {addressForm.province === 'Jawa Tengah' && (
+                              <>
+                                <SelectItem value="Semarang">Semarang</SelectItem>
+                                <SelectItem value="Solo">Surakarta</SelectItem>
+                                <SelectItem value="Yogyakarta">Yogyakarta</SelectItem>
+                                <SelectItem value="Magelang">Magelang</SelectItem>
+                                <SelectItem value="Salatiga">Salatiga</SelectItem>
+                                <SelectItem value="Pekalongan">Pekalongan</SelectItem>
+                                <SelectItem value="Tegal">Tegal</SelectItem>
+                              </>
+                            )}
+                            
+                            {/* Jawa Timur */}
+                            {addressForm.province === 'Jawa Timur' && (
+                              <>
+                                <SelectItem value="Surabaya">Surabaya</SelectItem>
+                                <SelectItem value="Malang">Malang</SelectItem>
+                                <SelectItem value="Batu">Batu</SelectItem>
+                                <SelectItem value="Blitar">Blitar</SelectItem>
+                                <SelectItem value="Kediri">Kediri</SelectItem>
+                                <SelectItem value="Madiun">Madiun</SelectItem>
+                                <SelectItem value="Mojokerto">Mojokerto</SelectItem>
+                                <SelectItem value="Pasuruan">Pasuruan</SelectItem>
+                                <SelectItem value="Probolinggo">Probolinggo</SelectItem>
+                              </>
+                            )}
+                            
+                            {/* Banten */}
+                            {addressForm.province === 'Banten' && (
+                              <>
+                                <SelectItem value="Tangerang">Tangerang</SelectItem>
+                                <SelectItem value="Tangerang Selatan">Tangerang Selatan</SelectItem>
+                                <SelectItem value="Serang">Serang</SelectItem>
+                                <SelectItem value="Cilegon">Cilegon</SelectItem>
+                              </>
+                            )}
+                            
+                            {/* Yogyakarta */}
+                            {addressForm.province === 'Yogyakarta' && (
+                              <>
+                                <SelectItem value="Yogyakarta">Yogyakarta</SelectItem>
+                                <SelectItem value="Bantul">Bantul</SelectItem>
+                                <SelectItem value="Sleman">Sleman</SelectItem>
+                                <SelectItem value="Kulon Progo">Kulon Progo</SelectItem>
+                                <SelectItem value="Gunung Kidul">Gunung Kidul</SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
