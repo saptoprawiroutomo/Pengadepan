@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import SalesTransaction from '@/models/SalesTransaction';
 import Product from '@/models/Product';
@@ -7,7 +8,7 @@ import { generateCode, getNextSequence } from '@/lib/utils-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const userSession = await getServerSession();
+    const userSession = await getServerSession(authOptions);
     if (!userSession || !['admin', 'kasir'].includes(userSession.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
