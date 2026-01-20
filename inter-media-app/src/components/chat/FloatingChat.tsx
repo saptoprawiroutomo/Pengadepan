@@ -51,7 +51,7 @@ export default function FloatingChat() {
     }
 
     return () => stopPolling();
-  }, [isOpen, session, isAdmin]);
+  }, [isOpen, session?.user?.id, isAdmin]); // Tambah dependency yang spesifik
 
   useEffect(() => {
     if (selectedRoom && isAdmin) {
@@ -65,18 +65,23 @@ export default function FloatingChat() {
   }, [messages]);
 
   const startPolling = () => {
+    // Poll for new messages every 10 seconds (lebih lambat)
     pollIntervalRef.current = setInterval(() => {
-      loadChatHistory();
-    }, 3000);
+      if (isOpen && session) {
+        loadChatHistory();
+      }
+    }, 10000);
   };
 
   const startAdminPolling = () => {
     pollIntervalRef.current = setInterval(() => {
-      loadChatRooms();
-      if (selectedRoom) {
-        loadMessages(selectedRoom);
+      if (isOpen && session) {
+        loadChatRooms();
+        if (selectedRoom) {
+          loadMessages(selectedRoom);
+        }
       }
-    }, 3000);
+    }, 10000);
   };
 
   const stopPolling = () => {
