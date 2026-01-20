@@ -264,101 +264,76 @@ export default function POSPage() {
           <CardTitle>Keranjang Belanja</CardTitle>
         </CardHeader>
         <CardContent>
-            <CardTitle>Total Transaksi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">
-                Rp {calculateTotal().toLocaleString('id-ID')}
-              </p>
-              <p className="text-muted-foreground">
-                {items.length} item(s)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Transaction Items */}
-      <Card className="rounded-2xl mt-6">
-        <CardHeader>
-          <CardTitle>Daftar Belanja</CardTitle>
-        </CardHeader>
-        <CardContent>
           {items.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <ShoppingCart className="h-16 w-16 mx-auto mb-4" />
               <p>Belum ada produk ditambahkan</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produk</TableHead>
-                  <TableHead>Harga</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Subtotal</TableHead>
-                  <TableHead>Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item) => (
-                  <TableRow key={item.productId}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {item.product.categoryId.name}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>Rp {item.product.price.toLocaleString('id-ID')}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.productId, item.qty - 1)}
-                          className="h-8 w-8 p-0 rounded-full"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <Input
-                          type="number"
-                          value={item.qty}
-                          onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
-                          className="w-16 h-8 text-center rounded-2xl"
-                          min="1"
-                          max={item.product.stock}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.productId, item.qty + 1)}
-                          disabled={item.qty >= item.product.stock}
-                          className="h-8 w-8 p-0 rounded-full"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      Rp {item.subtotal.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeItem(item.productId)}
-                        className="rounded-2xl"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produk</TableHead>
+                    <TableHead>Harga</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Subtotal</TableHead>
+                    <TableHead>Aksi</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item) => (
+                    <TableRow key={item.productId}>
+                      <TableCell>{item.product.name}</TableCell>
+                      <TableCell>Rp {item.product.price.toLocaleString('id-ID')}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.productId, item.qty - 1)}
+                            className="h-8 w-8 p-0 rounded-full"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center">{item.qty}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.productId, item.qty + 1)}
+                            className="h-8 w-8 p-0 rounded-full"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>Rp {item.subtotal.toLocaleString('id-ID')}</TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeItem(item.productId)}
+                          className="h-8 w-8 p-0 rounded-full"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              <div className="mt-6 pt-6 border-t">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-primary">
+                    Total: Rp {calculateTotal().toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {items.length} item(s)
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
