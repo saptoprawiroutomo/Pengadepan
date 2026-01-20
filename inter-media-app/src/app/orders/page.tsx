@@ -60,6 +60,15 @@ export default function OrdersPage() {
   const [paymentInfo, setPaymentInfo] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingProof, setUploadingProof] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState<'success' | 'error'>('success');
+
+  const showMessage = (message: string, type: 'success' | 'error' = 'success') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+  };
 
   const fetchOrders = async () => {
     try {
@@ -93,14 +102,14 @@ export default function OrdersPage() {
       });
 
       if (response.ok) {
-        alert('Bukti pembayaran berhasil diupload!');
+        showMessage('Bukti pembayaran berhasil diupload!', 'success');
         fetchOrders(); // Refresh orders
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        showMessage(`Error: ${errorData.error}`, 'error');
       }
     } catch (error) {
-      alert('Terjadi kesalahan saat upload');
+      showMessage('Terjadi kesalahan saat upload', 'error');
     } finally {
       setUploadingProof(null);
     }
@@ -186,11 +195,11 @@ export default function OrdersPage() {
                       // Redirect to the new order detail page
                       window.location.href = `/orders/${data.orderId}`;
                     } else {
-                      alert('Error creating test order');
+                      showMessage('Error creating test order', 'error');
                     }
                   } catch (error) {
                     console.error('Error creating test order:', error);
-                    alert('Error creating test order');
+                    showMessage('Error creating test order', 'error');
                   }
                 }}
               >
@@ -465,6 +474,41 @@ export default function OrdersPage() {
           </Card>
         ))}
       </div>
+
+      {/* Popup Modal */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
+            <div className="text-center">
+              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                popupType === 'success' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {popupType === 'success' ? (
+                  <span className="text-2xl">✅</span>
+                ) : (
+                  <span className="text-2xl">❌</span>
+                )}
+              </div>
+              <h3 className={`text-lg font-semibold mb-2 ${
+                popupType === 'success' ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {popupType === 'success' ? 'Berhasil!' : 'Error!'}
+              </h3>
+              <p className="text-gray-600 mb-4">{popupMessage}</p>
+              <Button 
+                onClick={() => setShowPopup(false)}
+                className={`w-full rounded-2xl ${
+                  popupType === 'success' 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
