@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Cari zona berdasarkan destinasi (optimized lookup)
     const destinationKey = destination.toLowerCase().replace(/\s+/g, '-');
-    const zoneInfo = SHIPPING_ZONES[destinationKey];
+    const zoneInfo = (SHIPPING_ZONES as any)[destinationKey];
     
     if (!zoneInfo) {
       return NextResponse.json({ error: 'Destination not supported' }, { status: 400 });
