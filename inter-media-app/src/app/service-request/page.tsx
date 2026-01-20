@@ -193,8 +193,13 @@ export default function ServiceRequestPage() {
             <MapPin className="h-8 w-8 mx-auto mb-2 text-primary" />
             <h3 className="font-medium mb-1">Kunjungi Toko</h3>
             <p className="text-sm text-muted-foreground mb-2">Bawa perangkat langsung</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Jln Klingkit Dalam Blok C No 22<br/>
+              RT 010/011, Rawa Buaya<br/>
+              Cengkareng, Jakarta Barat 11470
+            </p>
             <Button variant="outline" size="sm" className="rounded-2xl" asChild>
-              <a href="https://maps.google.com/?q=Inter+Media+Printer+Fotocopy+Computer+Jakarta" target="_blank" rel="noopener noreferrer">
+              <a href="https://maps.google.com/?q=Jln+Klingkit+Dalam+Blok+C+No+22+RT+010+011+Rawa+Buaya+Cengkareng+Jakarta+Barat+11470" target="_blank" rel="noopener noreferrer">
                 📍 Lihat Lokasi
               </a>
             </Button>
