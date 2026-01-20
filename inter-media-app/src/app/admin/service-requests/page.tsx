@@ -23,6 +23,7 @@ export default function AdminServiceRequestsPage() {
   const { data: session } = useSession();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.user?.role === 'admin') {
@@ -45,6 +46,7 @@ export default function AdminServiceRequestsPage() {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    setUpdatingId(id);
     try {
       const response = await fetch(`/api/service-requests/${id}`, {
         method: 'PUT',
@@ -54,9 +56,15 @@ export default function AdminServiceRequestsPage() {
 
       if (response.ok) {
         fetchRequests();
+      } else {
+        const errorData = await response.text();
+        alert(`Gagal update status: ${response.status} - ${errorData}`);
       }
     } catch (error) {
       console.error('Error updating status:', error);
+      alert('Terjadi kesalahan saat update status');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -136,23 +144,40 @@ export default function AdminServiceRequestsPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         {req.status === 'received' && (
-                          <Button size="sm" onClick={() => updateStatus(req._id, 'checking')}>
-                            Cek
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateStatus(req._id, 'checking')}
+                            disabled={updatingId === req._id}
+                          >
+                            {updatingId === req._id ? 'Loading...' : 'Cek'}
                           </Button>
                         )}
                         {req.status === 'checking' && (
-                          <Button size="sm" onClick={() => updateStatus(req._id, 'repairing')}>
-                            Perbaiki
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateStatus(req._id, 'repairing')}
+                            disabled={updatingId === req._id}
+                          >
+                            {updatingId === req._id ? 'Loading...' : 'Perbaiki'}
                           </Button>
                         )}
                         {req.status === 'repairing' && (
-                          <Button size="sm" onClick={() => updateStatus(req._id, 'done')}>
-                            Selesai
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateStatus(req._id, 'done')}
+                            disabled={updatingId === req._id}
+                          >
+                            {updatingId === req._id ? 'Loading...' : 'Selesai'}
                           </Button>
                         )}
                         {req.status === 'done' && (
-                          <Button size="sm" onClick={() => updateStatus(req._id, 'delivered')}>
-                            Antar
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateStatus(req._id, 'delivered')}
+                            disabled={updatingId === req._id}
+                            variant="outline"
+                          >
+                            {updatingId === req._id ? 'Loading...' : 'Tutup Tiket'}
                           </Button>
                         )}
                       </div>
