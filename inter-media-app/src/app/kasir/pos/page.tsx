@@ -32,6 +32,7 @@ export default function POSPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
+  const [customerName, setCustomerName] = useState('');
   const [items, setItems] = useState<POSItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -154,6 +155,7 @@ export default function POSPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          customerName,
           items: items.map(item => ({
             productId: item.productId,
             qty: item.qty
@@ -174,6 +176,7 @@ export default function POSPage() {
         
         // Reset form
         setItems([]);
+        setCustomerName('');
         fetchProducts(); // Refresh stock
       } else {
         alert(result.error || 'Gagal memproses transaksi');
@@ -198,6 +201,36 @@ export default function POSPage() {
       <h1 className="text-2xl font-bold mb-6">POS - Point of Sale</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Customer Info */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle>Informasi Pembeli</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="customerName">Nama Pembeli</Label>
+                <Input
+                  id="customerName"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Masukkan nama pembeli"
+                  className="rounded-2xl"
+                />
+              </div>
+              <div className="text-sm text-gray-600">
+                <p><strong>Tanggal:</strong> {new Date().toLocaleDateString('id-ID', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}</p>
+                <p><strong>Kasir:</strong> {session?.user?.name}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Product Selection */}
         <Card className="rounded-2xl">
           <CardHeader>
@@ -223,10 +256,14 @@ export default function POSPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Transaction Summary */}
-        <Card className="rounded-2xl">
-          <CardHeader>
+      {/* Shopping Cart */}
+      <Card className="rounded-2xl mt-6">
+        <CardHeader>
+          <CardTitle>Keranjang Belanja</CardTitle>
+        </CardHeader>
+        <CardContent>
             <CardTitle>Total Transaksi</CardTitle>
           </CardHeader>
           <CardContent>

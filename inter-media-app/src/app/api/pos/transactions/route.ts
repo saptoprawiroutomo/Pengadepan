@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { items } = await request.json();
+    const { items, customerName } = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Items tidak boleh kosong' }, { status: 400 });
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
     const transaction = await SalesTransaction.create({
       transactionCode,
       cashierId: userSession.user.id,
+      customerName: customerName || 'Walk-in Customer',
       items: transactionItems,
       total
     });

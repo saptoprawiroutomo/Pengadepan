@@ -29,6 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       date: transaction.createdAt.toLocaleDateString('id-ID'),
       time: transaction.createdAt.toLocaleTimeString('id-ID'),
       cashier: transaction.cashierId.name,
+      customerName: transaction.customerName || 'Walk-in Customer',
       items: transaction.items.map((item: any) => ({
         name: item.nameSnapshot || item.productId.name,
         qty: item.qty,

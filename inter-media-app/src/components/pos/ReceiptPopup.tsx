@@ -17,6 +17,7 @@ interface ReceiptData {
   date: string;
   time: string;
   cashier: string;
+  customerName: string;
   items: ReceiptItem[];
   total: number;
   storeName: string;
@@ -88,6 +89,7 @@ export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPo
               <span>{receiptData.date} {receiptData.time}</span>
             </div>
             <div className="text-xs">Kasir: {receiptData.cashier}</div>
+            <div className="text-xs">Pembeli: {receiptData.customerName}</div>
           </div>
 
           <div className="border-t border-dashed border-gray-400 pt-2 mb-2">
