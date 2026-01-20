@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
@@ -27,7 +27,7 @@ interface Category {
   slug: string;
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
   const { data: session } = useSession();
   const { refreshCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
@@ -244,5 +244,13 @@ export default function ProductsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

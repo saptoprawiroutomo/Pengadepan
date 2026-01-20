@@ -343,7 +343,7 @@ export default function CheckoutPage() {
                 )}
 
                 {/* KTP Address Option */}
-                {session?.user?.address && (
+                {(session?.user as any)?.address && (
                   <div className="space-y-2">
                     <Label>Alamat KTP</Label>
                     <div 
@@ -357,8 +357,8 @@ export default function CheckoutPage() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">{session.user.name} - {session.user.phone || 'No phone'}</p>
-                          <p className="text-sm text-muted-foreground">{session.user.address}</p>
+                          <p className="font-medium">{session.user.name} - {(session.user as any).phone || 'No phone'}</p>
+                          <p className="text-sm text-muted-foreground">{(session.user as any).address}</p>
                         </div>
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           KTP
