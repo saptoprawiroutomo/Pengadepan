@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +39,8 @@ interface User {
 }
 
 export default function UsersPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,6 +49,20 @@ export default function UsersPage() {
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<UserForm>({
     resolver: zodResolver(userFormSchema),
   });
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    
+    if (session.user.role !== 'admin') {
+      router.push('/');
+      return;
+    }
+
+    fetchUsers();
+  }, [session, router]);
 
   const fetchUsers = async () => {
     try {

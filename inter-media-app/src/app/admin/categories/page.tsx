@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +25,8 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,7 +36,19 @@ export default function CategoriesPage() {
     resolver: zodResolver(categorySchema),
   });
 
-  const fetchCategories = async () => {
+  useEffect(() => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    
+    if (session.user.role !== 'admin') {
+      router.push('/');
+      return;
+    }
+
+    fetchCategories();
+  }, [session, router]);
     try {
       const response = await fetch('/api/admin/categories');
       if (!response.ok) {
