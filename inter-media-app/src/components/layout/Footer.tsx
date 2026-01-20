@@ -40,7 +40,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Inter Medi-A. All rights reserved.</p>
+          <p>&copy; 2026 Inter Medi-A. Pembuat Sapto Prawiro Utomo. All rights reserved.</p>
         </div>
       </div>
     </footer>
