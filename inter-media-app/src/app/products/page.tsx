@@ -34,6 +34,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [addedToCart, setAddedToCart] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const categoryFilter = searchParams.get('category') || '';
 
@@ -117,8 +118,14 @@ export default function ProductsPage() {
       });
 
       if (response.ok) {
-        alert('Produk berhasil ditambahkan ke keranjang');
+        // Show success animation
+        setAddedToCart(productId);
         refreshCart();
+        
+        // Hide animation after 2 seconds
+        setTimeout(() => {
+          setAddedToCart(null);
+        }, 2000);
       } else {
         alert('Gagal menambahkan ke keranjang');
       }
@@ -207,11 +214,22 @@ export default function ProductsPage() {
                   </Button>
                   <Button 
                     size="sm" 
-                    className="rounded-2xl" 
+                    className={`rounded-2xl transition-all duration-300 ${
+                      addedToCart === product._id 
+                        ? 'bg-green-500 hover:bg-green-600 scale-110' 
+                        : ''
+                    }`}
                     disabled={product.stock === 0}
                     onClick={() => handleAddToCart(product._id)}
                   >
-                    <ShoppingCart className="h-4 w-4" />
+                    {addedToCart === product._id ? (
+                      <div className="flex items-center gap-1">
+                        <span className="animate-bounce">✓</span>
+                        <span className="text-xs">Added!</span>
+                      </div>
+                    ) : (
+                      <ShoppingCart className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>

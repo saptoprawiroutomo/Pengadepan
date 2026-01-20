@@ -29,6 +29,7 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -68,8 +69,14 @@ export default function ProductDetailPage() {
       });
 
       if (response.ok) {
-        alert('Produk berhasil ditambahkan ke keranjang');
+        // Show success animation
+        setShowSuccess(true);
         refreshCart(); // Update cart count
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 3000);
       } else {
         alert('Gagal menambahkan ke keranjang');
       }
@@ -172,12 +179,38 @@ export default function ProductDetailPage() {
                     <Button
                       onClick={handleAddToCart}
                       disabled={isAddingToCart}
-                      className="flex-1 rounded-2xl"
+                      className={`flex-1 rounded-2xl transition-all duration-300 ${
+                        showSuccess 
+                          ? 'bg-green-500 hover:bg-green-600' 
+                          : ''
+                      }`}
                     >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      {isAddingToCart ? 'Menambahkan...' : 'Tambah ke Keranjang'}
+                      {showSuccess ? (
+                        <>
+                          <span className="animate-bounce mr-2">✓</span>
+                          Berhasil Ditambahkan!
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          {isAddingToCart ? 'Menambahkan...' : 'Tambah ke Keranjang'}
+                        </>
+                      )}
                     </Button>
                   </div>
+
+                  {/* Success Toast */}
+                  {showSuccess && (
+                    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+                      <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+                        <span className="animate-bounce">🛒</span>
+                        <div>
+                          <p className="font-medium">Produk ditambahkan!</p>
+                          <p className="text-sm opacity-90">{quantity}x {product.name}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="text-sm text-muted-foreground">
                     Subtotal: Rp {(product.price * quantity).toLocaleString('id-ID')}
