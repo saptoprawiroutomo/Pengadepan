@@ -9,8 +9,6 @@ import { generateCode, getNextSequence } from '@/lib/utils-server';
 import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest) {
-  const session = await mongoose.startSession();
-  
   try {
     console.log('Creating order...');
     
@@ -29,11 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB();
-    
-    session.startTransaction();
 
     // Get cart
-    const cart = await Cart.findOne({ userId: userSession.user.id }).session(session);
+    const cart = await Cart.findOne({ userId: userSession.user.id });
     if (!cart || cart.items.length === 0) {
       throw new Error('Keranjang kosong');
     }
@@ -43,7 +39,7 @@ export async function POST(request: NextRequest) {
     let total = 0;
 
     for (const cartItem of cart.items) {
-      const product = await Product.findById(cartItem.productId).session(session);
+      const product = await Product.findById(cartItem.productId);
       
       if (!product || !product.isActive) {
         throw new Error(`Produk ${product?.name || 'tidak ditemukan'} tidak tersedia`);
@@ -53,7 +49,7 @@ export async function POST(request: NextRequest) {
         throw new Error(`Stok ${product.name} tidak mencukupi. Tersedia: ${product.stock}`);
       }
 
-      // Update stock atomically
+      // Update stock
       const updateResult = await Product.updateOne(
         { 
           _id: product._id, 
@@ -65,7 +61,7 @@ export async function POST(request: NextRequest) {
             soldCount: cartItem.qty
           }
         }
-      ).session(session);
+      );
 
       if (updateResult.modifiedCount === 0) {
         throw new Error(`Gagal mengupdate stok ${product.name}`);
@@ -89,7 +85,7 @@ export async function POST(request: NextRequest) {
     const orderCode = generateCode('ORD', year, sequence);
 
     // Create order
-    const order = await Order.create([{
+    const order = await Order.create({
       orderCode,
       userId: userSession.user.id,
       items: orderItems,
@@ -102,25 +98,20 @@ export async function POST(request: NextRequest) {
       shippingEstimate: body.shippingEstimate,
       paymentMethod: paymentMethod || 'transfer',
       status: 'pending'
-    }], { session });
+    });
 
     // Clear cart
     await Cart.findOneAndUpdate(
       { userId: userSession.user.id },
       { items: [] }
-    ).session(session);
-
-    await session.commitTransaction();
+    );
 
     return NextResponse.json({
       message: 'Pesanan berhasil dibuat',
-      order: order[0]
+      order: order
     });
 
   } catch (error: any) {
-    await session.abortTransaction();
     return NextResponse.json({ error: error.message }, { status: 400 });
-  } finally {
-    session.endSession();
   }
 }
