@@ -3,14 +3,5 @@
   "env": {
     "NEXTAUTH_URL": "https://inter-media-app.vercel.app",
     "NEXTAUTH_SECRET": "inter-media-nextauth-secret-2024-production"
-  },
-  "ignore": [
-    "src/app/api/addresses/**",
-    "src/app/api/services/**",
-    "src/app/api/admin/categories/**",
-    "src/app/api/admin/users/**",
-    "src/app/api/admin/service-requests/**",
-    "src/app/api/orders/[id]/receipt/**",
-    "src/app/api/orders/[id]/payment-proof/**"
-  ]
+  }
 }
