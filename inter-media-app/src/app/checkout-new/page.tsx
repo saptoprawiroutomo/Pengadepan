@@ -538,41 +538,86 @@ export default function CheckoutPage() {
                     Pilih kota tujuan untuk melihat opsi pengiriman
                   </div>
                 ) : (
-                  <RadioGroup 
-                    value={selectedShipping?.courier} 
-                    onValueChange={(value) => {
-                      const option = shippingOptions.find(opt => opt.courier === value);
-                      setSelectedShipping(option || null);
-                    }}
-                  >
-                    {shippingOptions.map((option) => (
-                      <div key={option.courier} className={`flex items-center space-x-2 p-3 border rounded-lg ${
-                        option.type === 'kurir-toko' ? 'border-green-200 bg-green-50' : ''
-                      }`}>
-                        <RadioGroupItem value={option.courier} id={option.courier} />
-                        <Label htmlFor={option.courier} className="flex-1 cursor-pointer">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-medium flex items-center gap-2">
-                                {option.courier}
-                                {option.type === 'kurir-toko' && (
-                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                                    Kurir Toko
-                                  </span>
-                                )}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {option.description}
-                              </p>
-                            </div>
-                            <p className="font-bold">
-                              Rp {option.cost.toLocaleString('id-ID')}
-                            </p>
+                  <div className="space-y-3">
+                    <RadioGroup 
+                      value={selectedShipping?.courier} 
+                      onValueChange={(value) => {
+                        const option = shippingOptions.find(opt => opt.courier === value);
+                        setSelectedShipping(option || null);
+                      }}
+                      className="space-y-3"
+                    >
+                      {shippingOptions.map((option) => (
+                        <div 
+                          key={option.courier} 
+                          className={`relative border rounded-xl p-4 transition-all hover:shadow-sm ${
+                            selectedShipping?.courier === option.courier 
+                              ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          } ${
+                            option.type === 'kurir-toko' 
+                              ? 'border-green-300 bg-green-50' 
+                              : ''
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <RadioGroupItem 
+                              value={option.courier} 
+                              id={option.courier}
+                              className="mt-1"
+                            />
+                            <Label htmlFor={option.courier} className="flex-1 cursor-pointer">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold text-gray-900">
+                                      {option.courier}
+                                    </h4>
+                                    {option.type === 'kurir-toko' && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        🚲 Kurir Toko
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    Estimasi: {option.estimatedDays} hari
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {option.description}
+                                  </p>
+                                </div>
+                                <div className="text-right ml-4">
+                                  <p className="text-lg font-bold text-gray-900">
+                                    Rp {option.cost.toLocaleString('id-ID')}
+                                  </p>
+                                  {option.type === 'kurir-toko' && (
+                                    <p className="text-xs text-green-600 font-medium">
+                                      Hemat & Cepat
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </Label>
                           </div>
-                        </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                    
+                    {/* Shipping Info */}
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start space-x-2">
+                        <div className="text-blue-500 mt-0.5">ℹ️</div>
+                        <div className="text-sm text-blue-800">
+                          <p className="font-medium mb-1">Informasi Pengiriman:</p>
+                          <ul className="text-xs space-y-1">
+                            <li>• Kurir Toko: Pengiriman same day untuk area Jakarta & 1 hari untuk Jabodetabek</li>
+                            <li>• Ekspedisi: Estimasi waktu dapat berubah tergantung kondisi</li>
+                            <li>• Barang akan dikemas dengan aman dan rapi</li>
+                          </ul>
+                        </div>
                       </div>
-                    ))}
-                  </RadioGroup>
+                    </div>
+                  </div>
                 )}
               </div>
 
