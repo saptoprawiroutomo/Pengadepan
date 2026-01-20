@@ -42,12 +42,25 @@ export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPo
             <head>
               <title>Receipt - ${receiptData?.transactionCode}</title>
               <style>
-                body { font-family: monospace; font-size: 12px; margin: 20px; }
+                body { 
+                  font-family: 'Courier New', monospace; 
+                  font-size: 12px; 
+                  margin: 20px; 
+                  line-height: 1.4;
+                }
                 .receipt { max-width: 300px; margin: 0 auto; }
                 .center { text-align: center; }
                 .line { border-bottom: 1px dashed #000; margin: 10px 0; }
-                .item-row { display: flex; justify-content: space-between; margin: 2px 0; }
+                .item-row { 
+                  display: flex; 
+                  justify-content: space-between; 
+                  margin: 2px 0; 
+                }
                 .total { font-weight: bold; font-size: 14px; }
+                @media print {
+                  body { margin: 0; }
+                  .receipt { max-width: none; }
+                }
               </style>
             </head>
             <body>
@@ -56,8 +69,12 @@ export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPo
           </html>
         `);
         printWindow.document.close();
-        printWindow.print();
-        printWindow.close();
+        
+        // Wait for content to load then print
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
       }
     }
   };
@@ -74,6 +91,9 @@ export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPo
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription>
+            Struk pembayaran untuk transaksi #{receiptData.transactionId}
+          </DialogDescription>
         </DialogHeader>
 
         <div id="receipt-content" className="receipt font-mono text-sm">
