@@ -24,6 +24,7 @@ interface Product {
   categoryId: { _id: string; name: string };
   price: number;
   stock: number;
+  weight: number; // Add weight field
   images?: string[];
   description?: string;
   isActive: boolean;
@@ -140,6 +141,7 @@ export default function ProductsPage() {
       categoryId: product.categoryId._id,
       price: product.price,
       stock: product.stock,
+      weight: product.weight || 0, // Add weight field
       description: product.description,
     });
     setIsDialogOpen(true);
@@ -356,6 +358,7 @@ export default function ProductsPage() {
                 <TableHead>Kategori</TableHead>
                 <TableHead>Harga</TableHead>
                 <TableHead>Stok</TableHead>
+                <TableHead>Berat</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Aksi</TableHead>
               </TableRow>
@@ -380,6 +383,7 @@ export default function ProductsPage() {
                   <TableCell>{product.categoryId.name}</TableCell>
                   <TableCell>Rp {product.price.toLocaleString('id-ID')}</TableCell>
                   <TableCell>{product.stock}</TableCell>
+                  <TableCell>{product.weight || 0}g</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
