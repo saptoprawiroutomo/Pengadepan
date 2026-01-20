@@ -32,7 +32,7 @@ export default function AdminServiceRequestsPage() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('/api/admin/service-requests');
+      const response = await fetch('/api/service-requests');
       if (response.ok) {
         const data = await response.json();
         setRequests(data.requests || []);
@@ -46,7 +46,7 @@ export default function AdminServiceRequestsPage() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const response = await fetch(`/api/admin/service-requests/${id}`, {
+      const response = await fetch(`/api/service-requests/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

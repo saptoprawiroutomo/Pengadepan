@@ -4,6 +4,27 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import ServiceRequest from '@/models/ServiceRequest';
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !['admin', 'kasir'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const requests = await ServiceRequest.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json({ requests });
+  } catch (error: any) {
+    console.error('Fetch service requests error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
