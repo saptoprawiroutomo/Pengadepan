@@ -26,7 +26,7 @@ export default function ReportsPage() {
   useEffect(() => {
     if (!session) return;
     
-    if (session.user.role !== 'admin') {
+    if (!['admin', 'kasir'].includes(session.user.role)) {
       router.push('/');
       return;
     }

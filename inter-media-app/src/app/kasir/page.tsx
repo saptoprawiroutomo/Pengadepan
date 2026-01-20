@@ -41,6 +41,12 @@ export default function KasirPage() {
       icon: ShoppingCart, 
       desc: 'Sistem Point of Sale untuk transaksi' 
     },
+    { 
+      title: 'Laporan Penjualan', 
+      href: '/admin/reports', 
+      icon: BarChart3, 
+      desc: 'Lihat laporan penjualan dan statistik' 
+    },
   ];
 
   return (

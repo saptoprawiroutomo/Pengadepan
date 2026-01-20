@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Minus, Trash2, ShoppingCart, Printer } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingCart, Printer, BarChart3 } from 'lucide-react';
 import ReceiptPopup from '@/components/pos/ReceiptPopup';
 
 interface Product {
@@ -198,7 +199,15 @@ export default function POSPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">POS - Point of Sale</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">POS - Point of Sale</h1>
+        <Button variant="outline" asChild className="rounded-2xl">
+          <Link href="/admin/reports">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Laporan Penjualan
+          </Link>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Customer Info */}
