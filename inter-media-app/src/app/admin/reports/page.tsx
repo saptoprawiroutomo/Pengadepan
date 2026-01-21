@@ -18,26 +18,8 @@ export default function ReportsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
-  // HARDCODED DATA - IMMEDIATE FIX
-  const [salesData, setSalesData] = useState({
-    summary: {
-      totalTransactions: 1,
-      totalRevenue: 23516000,
-      totalItems: 3,
-      averageOrderValue: 23516000
-    },
-    transactions: [],
-    orders: [{
-      orderCode: 'ORD-2026-608287',
-      total: 23516000,
-      status: 'delivered'
-    }],
-    dailySales: [{
-      date: '2026-01-21',
-      totalSales: 23516000,
-      orderCount: 1
-    }]
-  });
+  // Initialize with null to use API data
+  const [salesData, setSalesData] = useState<any>(null);
   
   const [servicesData, setServicesData] = useState<any>(null);
   const [stockData, setStockData] = useState<any>(null);
@@ -66,20 +48,22 @@ export default function ReportsPage() {
   const fetchAllReports = async () => {
     setIsLoading(true);
     try {
-      // SKIP API CALL - USE HARDCODED DATA ONLY
-      console.log('Using hardcoded sales data - skipping API call');
-      
-      // Still try to fetch other reports
       const params = new URLSearchParams();
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
-      const [servicesRes, stockRes, topProductsRes] = await Promise.all([
+      const [salesRes, servicesRes, stockRes, topProductsRes] = await Promise.all([
+        fetch(`/api/reports/sales?${params}`),
         fetch(`/api/reports/services?${params}`),
         fetch('/api/reports/stock'),
         fetch('/api/reports/top-products')
       ]);
 
+      if (salesRes.ok) {
+        const salesResult = await salesRes.json();
+        console.log('Sales data received:', salesResult);
+        setSalesData(salesResult);
+      }
       if (servicesRes.ok) setServicesData(await servicesRes.json());
       if (stockRes.ok) setStockData(await stockRes.json());
       if (topProductsRes.ok) setTopProductsData(await topProductsRes.json());
@@ -260,7 +244,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="h-8 w-8 text-primary" />
                         <div>
-                          <p className="text-2xl font-bold">1</p>
+                          <p className="text-2xl font-bold">{salesData?.summary?.totalTransactions || 0}</p>
                           <p className="text-sm text-muted-foreground">Total Transaksi</p>
                         </div>
                       </div>
@@ -284,7 +268,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-blue-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp 23,516,000</p>
+                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.totalRevenue || 0).toLocaleString('id-ID')}</p>
                           <p className="text-sm text-muted-foreground">Total Penjualan</p>
                         </div>
                       </div>
@@ -296,7 +280,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-purple-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp 23,516,000</p>
+                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.averageOrderValue || 0).toLocaleString('id-ID')}</p>
                           <p className="text-sm text-muted-foreground">Rata-rata Order</p>
                         </div>
                       </div>
