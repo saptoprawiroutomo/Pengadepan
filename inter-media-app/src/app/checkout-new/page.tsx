@@ -176,19 +176,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // Debounced shipping calculation
-  const debouncedCalculateShipping = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (cartItems: CartItem[]) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => calculateShipping(cartItems), 300);
-      };
-    })(),
-    [selectedCity]
-  );
-
-  const calculateShipping = async (cartItems: CartItem[]) => {
+  const calculateShipping = useCallback(async (cartItems: CartItem[]) => {
     if (!selectedCity) return;
     
     const totalWeight = cartItems.reduce((sum, item) => 
@@ -246,7 +234,19 @@ export default function CheckoutPage() {
     } finally {
       setIsCalculatingShipping(false);
     }
-  };
+  }, [selectedCity, shippingCache]);
+
+  // Debounced shipping calculation
+  const debouncedCalculateShipping = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (cartItems: CartItem[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => calculateShipping(cartItems), 300);
+      };
+    })(),
+    [calculateShipping]
+  );
 
   const subtotal = cart.reduce((sum, item) => sum + (item.priceSnapshot * item.qty), 0);
   const shippingCost = selectedShipping?.cost || 0;
