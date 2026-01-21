@@ -512,8 +512,28 @@ export default function CheckoutPage() {
                         console.log('City selected:', value);
                         setSelectedCity(value);
                         setShippingAddress({...shippingAddress, city: value});
-                        if (cart.length > 0) {
-                          debouncedCalculateShipping(cart);
+                        if (cart.length > 0 && value) {
+                          // Use the value directly instead of selectedCity state
+                          setTimeout(() => {
+                            const totalWeight = cart.reduce((sum, item) => 
+                              sum + ((item.productId.weight || 1000) * item.qty), 0
+                            );
+                            
+                            const cacheKey = `${value}-${totalWeight}`;
+                            if (shippingCache.has(cacheKey)) {
+                              console.log('Using cached result for:', cacheKey);
+                              const cached = shippingCache.get(cacheKey);
+                              setShippingOptions(cached.shippingOptions || []);
+                              setShippingInfo(cached);
+                              const recommended = cached.shippingOptions?.find((opt: ShippingOption) => opt.recommended);
+                              const selected = recommended || cached.shippingOptions?.[0];
+                              if (selected) {
+                                setSelectedShipping(selected);
+                              }
+                            } else {
+                              debouncedCalculateShipping(cart);
+                            }
+                          }, 100);
                         }
                       }}
                     >
