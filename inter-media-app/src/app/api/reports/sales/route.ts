@@ -22,37 +22,67 @@ export async function GET(request: NextRequest) {
     
     console.log('Found sales transactions:', salesTransactions.length);
     
-    // Get completed orders
+    // Get completed orders (include confirmed, shipped, and delivered)
     const completedOrders = await mongoose.connection.db.collection('orders')
-      .find({ status: 'delivered' })
+      .find({ 
+        status: { 
+          $in: ['confirmed', 'shipped', 'delivered'] 
+        } 
+      })
       .sort({ createdAt: -1 })
       .toArray();
     
     console.log('Found completed orders:', completedOrders.length);
     
-    // Calculate summary
-    const totalSales = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
-    const totalTransactions = salesTransactions.length;
-    const totalItems = salesTransactions.reduce((sum, sale) => 
-      sum + (sale.items?.reduce((itemSum, item) => itemSum + (item.qty || item.quantity || 0), 0) || 0), 0);
+    // Calculate summary from both POS and online orders
+    const posRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
+    const onlineRevenue = completedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
     
-    // Daily sales
-    const dailySales = salesTransactions.reduce((acc, sale) => {
+    const totalRevenue = posRevenue + onlineRevenue;
+    const totalTransactions = salesTransactions.length + completedOrders.length;
+    
+    const posItems = salesTransactions.reduce((sum, sale) => 
+      sum + (sale.items?.reduce((itemSum, item) => itemSum + (item.qty || item.quantity || 0), 0) || 0), 0);
+    const onlineItems = completedOrders.reduce((sum, order) => 
+      sum + (order.items?.reduce((itemSum, item) => itemSum + (item.qty || 0), 0) || 0), 0);
+    
+    const totalItems = posItems + onlineItems;
+    
+    // Daily sales from both POS and online orders
+    const dailySales = {};
+    
+    // Add POS transactions
+    salesTransactions.forEach(sale => {
       const date = new Date(sale.createdAt || sale.transactionDate).toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = { date, totalSales: 0, orderCount: 0 };
+      if (!dailySales[date]) {
+        dailySales[date] = { date, totalSales: 0, orderCount: 0, posCount: 0, onlineCount: 0 };
       }
-      acc[date].totalSales += (sale.total || sale.totalAmount || 0);
-      acc[date].orderCount += 1;
-      return acc;
-    }, {});
+      dailySales[date].totalSales += (sale.total || sale.totalAmount || 0);
+      dailySales[date].orderCount += 1;
+      dailySales[date].posCount += 1;
+    });
+    
+    // Add online orders
+    completedOrders.forEach(order => {
+      const date = new Date(order.createdAt).toISOString().split('T')[0];
+      if (!dailySales[date]) {
+        dailySales[date] = { date, totalSales: 0, orderCount: 0, posCount: 0, onlineCount: 0 };
+      }
+      dailySales[date].totalSales += (order.total || 0);
+      dailySales[date].orderCount += 1;
+      dailySales[date].onlineCount += 1;
+    });
 
     return NextResponse.json({
       summary: {
         totalTransactions,
-        totalRevenue: totalSales,
+        totalRevenue,
         totalItems,
-        averageOrderValue: totalTransactions > 0 ? totalSales / totalTransactions : 0
+        averageOrderValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+        posRevenue,
+        onlineRevenue,
+        posTransactions: salesTransactions.length,
+        onlineOrders: completedOrders.length
       },
       transactions: salesTransactions,
       orders: completedOrders,
