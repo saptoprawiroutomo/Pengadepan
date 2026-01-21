@@ -103,6 +103,8 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Error fetching addresses:', error);
+      // Set default values if fetch fails
+      setAddresses([]);
     }
   };
 
@@ -121,18 +123,22 @@ export default function CheckoutPage() {
   };
 
   const fillKtpAddress = () => {
-    if (session?.user) {
-      setShippingAddress({
-        receiverName: session.user.name || '',
-        phone: (session.user as any).phone || '',
-        province: 'DKI Jakarta', // Default, user can change
-        city: 'Jakarta Pusat', // Default, user can change
-        district: '',
-        postalCode: '',
-        fullAddress: (session.user as any).address || '',
-        addressLabel: 'KTP'
-      });
-      setSelectedCity('Jakarta Pusat');
+    try {
+      if (session?.user) {
+        setShippingAddress({
+          receiverName: session.user.name || '',
+          phone: (session.user as any)?.phone || '',
+          province: 'DKI Jakarta',
+          city: 'Jakarta Pusat',
+          district: '',
+          postalCode: '',
+          fullAddress: (session.user as any)?.address || '',
+          addressLabel: 'KTP'
+        });
+        setSelectedCity('Jakarta Pusat');
+      }
+    } catch (error) {
+      console.error('Error filling KTP address:', error);
     }
   };
 
