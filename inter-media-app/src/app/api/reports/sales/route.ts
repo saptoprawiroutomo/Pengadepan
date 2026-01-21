@@ -112,7 +112,17 @@ export async function GET(request: NextRequest) {
       },
       transactions: salesTransactions,
       orders: completedOrders,
-      dailySales: Object.values(dailySales)
+      dailySales: Object.values(dailySales),
+      debug: {
+        completedOrdersCount: completedOrders.length,
+        totalRevenue,
+        totalTransactions,
+        sampleOrder: completedOrders[0] ? {
+          orderCode: completedOrders[0].orderCode,
+          total: completedOrders[0].total,
+          status: completedOrders[0].status
+        } : null
+      }
     });
 
   } catch (error: any) {
