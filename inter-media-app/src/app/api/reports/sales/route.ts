@@ -20,11 +20,12 @@ export async function GET(request: NextRequest) {
 
     // Build date filter
     let dateFilter = {};
-    if (startDate || endDate) {
-      dateFilter = { createdAt: {} };
-      if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
-      if (endDate) dateFilter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
-    }
+    // Temporarily disable date filter for debugging
+    // if (startDate || endDate) {
+    //   dateFilter = { createdAt: {} };
+    //   if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    //   if (endDate) dateFilter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
+    // }
 
     // Get sales transactions
     const salesTransactions = await mongoose.connection.db.collection('salestransactions')
