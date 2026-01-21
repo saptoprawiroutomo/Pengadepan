@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     // Kurir toko untuk zona 1 dan 2 dengan logika berat dan jarak baru
     if (zone <= 2) {
       const storeResult = calculateStoreCourier(distance, totalWeight);
-      const estimatedDays = STORE_COURIER_RATES['KURIR TOKO'].estimatedDays[`zone${zone}` as keyof typeof STORE_COURIER_RATES['KURIR TOKO'].estimatedDays];
+      const estimatedDays = zone === 1 ? 'Same Day' : '1 hari';
       
       shippingOptions.push({
         courier: 'KURIR TOKO',
@@ -212,7 +212,9 @@ export async function POST(request: NextRequest) {
     // GoSend untuk zona 1 dan 2 (Jabodetabek) dengan batas berat 20kg
     if (zone <= 2 && totalWeight <= 20000) {
       for (const [serviceName, rates] of Object.entries(GOSEND_RATES)) {
-        const estimatedDays = rates.estimatedDays[`zone${zone}` as keyof typeof rates.estimatedDays];
+        const estimatedDays = zone === 1 ? 
+          (serviceName.includes('INSTANT') ? '1-2 jam' : '4-8 jam') :
+          (serviceName.includes('INSTANT') ? '2-4 jam' : '6-12 jam');
         
         // Check distance limit
         if (distance <= rates.maxDistance) {
