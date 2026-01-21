@@ -35,3 +35,6 @@
 [1]  POST /api/shipping/calculate 200 in 13ms (compile: 4ms, proxy.ts: 4ms, render: 4ms)
 [1]  POST /api/shipping/calculate 200 in 12ms (compile: 3ms, proxy.ts: 5ms, render: 4ms)
 [1]  POST /api/shipping/calculate 200 in 11ms (compile: 3ms, proxy.ts: 4ms, render: 4ms)
+[0] node socket-server.js exited with code SIGINT
+[1] [?25h
+[1] next dev exited with code SIGINT

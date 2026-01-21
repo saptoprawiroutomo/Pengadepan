@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Destination is required' }, { status: 400 });
     }
 
-    // Cari zona berdasarkan destinasi (optimized lookup)
+    // Optimized lookup
     const destinationKey = destination.toLowerCase().replace(/\s+/g, '-');
     const zoneInfo = (SHIPPING_ZONES as any)[destinationKey];
     
@@ -157,30 +157,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Destination not supported' }, { status: 400 });
     }
 
-    // Konversi gram ke kg (minimum 1kg) - optimized calculation
     const weightInKg = Math.max(1, Math.ceil(totalWeight / 1000));
     const zone = zoneInfo.zone;
     const distance = zoneInfo.distance;
+    const isHeavy = needsCargo(totalWeight);
 
-    // Pre-allocate array for better performance
+    // Pre-allocate array
     const shippingOptions = [];
 
-    // Ekspedisi reguler dengan distance-based pricing
-    for (const [courier, rates] of Object.entries(SHIPPING_RATES)) {
+    // Priority expedisi (tampilkan yang populer dulu)
+    const priorityExpedisi = ['JNE REG', 'J&T REG', 'TIKI REG'];
+    const otherExpedisi = Object.keys(SHIPPING_RATES).filter(k => !priorityExpedisi.includes(k));
+    
+    // Process priority expedisi first
+    for (const courier of priorityExpedisi) {
+      const rates = SHIPPING_RATES[courier as keyof typeof SHIPPING_RATES];
+      if (isHeavy && !courier.includes('KARGO')) continue;
+      
       const baseRate = rates[`zone${zone}` as keyof typeof rates] as number;
       const perKgRate = rates.perKg[`zone${zone}` as keyof typeof rates.perKg] as number;
       const estimatedDays = rates.estimatedDays[`zone${zone}` as keyof typeof rates.estimatedDays] as string;
       
-      // Apply distance-based pricing (10% increase per km for long distance)
       let cost = baseRate + (perKgRate * (weightInKg - 1));
-      if (distance > 50) { // Long distance adjustment
-        const distanceMultiplier = 1 + ((distance - 50) * 0.01); // 1% per km after 50km
-        cost = Math.round(cost * distanceMultiplier);
-      }
-      
-      // Filter out unsuitable options for heavy items
-      if (needsCargo(totalWeight) && !courier.includes('KARGO')) {
-        continue; // Skip regular expedisi for >20kg
+      if (distance > 50) {
+        cost = Math.round(cost * (1 + ((distance - 50) * 0.01)));
       }
       
       shippingOptions.push({
@@ -188,51 +188,42 @@ export async function POST(request: NextRequest) {
         service: 'REG',
         cost,
         estimatedDays,
-        description: `${courier} - ${estimatedDays} hari - ${zoneInfo.name} (${weightInKg}kg, ${distance}km)`,
+        description: `${courier} - ${estimatedDays} hari - ${zoneInfo.name} (${weightInKg}kg)`,
         type: 'ekspedisi'
       });
     }
 
-    // Kurir toko untuk zona 1 dan 2 dengan logika berat dan jarak baru
+    // Kurir toko untuk zona 1-2
     if (zone <= 2) {
       const storeResult = calculateStoreCourier(distance, totalWeight);
-      const estimatedDays = zone === 1 ? 'Same Day' : '1 hari';
-      
       shippingOptions.push({
         courier: 'KURIR TOKO',
         service: storeResult.type === 'kargo' ? 'KARGO' : 'ANTAR',
         cost: storeResult.cost,
-        estimatedDays,
+        estimatedDays: zone === 1 ? 'Same Day' : '1 hari',
         description: storeResult.description,
         type: storeResult.type,
-        recommended: needsCargo(totalWeight) // Recommend for heavy items
+        recommended: isHeavy
       });
     }
 
-    // GoSend untuk zona 1 dan 2 (Jabodetabek) dengan batas berat 20kg
+    // GoSend untuk zona 1-2 dan berat <= 20kg
     if (zone <= 2 && totalWeight <= 20000) {
-      for (const [serviceName, rates] of Object.entries(GOSEND_RATES)) {
-        const estimatedDays = zone === 1 ? 
-          (serviceName.includes('INSTANT') ? '1-2 jam' : '4-8 jam') :
-          (serviceName.includes('INSTANT') ? '2-4 jam' : '6-12 jam');
-        
-        // Check distance limit
-        if (distance <= rates.maxDistance) {
-          const cost = calculateDistanceBasedShipping(rates.baseRate, rates.perKmRate, distance, weightInKg);
-          
-          shippingOptions.push({
-            courier: serviceName,
-            service: 'GOSEND',
-            cost,
-            estimatedDays,
-            description: `${serviceName} - ${estimatedDays} - ${zoneInfo.name} (${weightInKg}kg, ${distance}km)`,
-            type: 'gosend'
-          });
-        }
+      const gosendInstant = GOSEND_RATES['GOSEND INSTANT'];
+      if (distance <= gosendInstant.maxDistance) {
+        const cost = calculateDistanceBasedShipping(gosendInstant.baseRate, gosendInstant.perKmRate, distance, weightInKg);
+        shippingOptions.push({
+          courier: 'GOSEND INSTANT',
+          service: 'GOSEND',
+          cost,
+          estimatedDays: zone === 1 ? '1-2 jam' : '2-4 jam',
+          description: `GOSEND INSTANT - ${zone === 1 ? '1-2 jam' : '2-4 jam'} - ${zoneInfo.name}`,
+          type: 'gosend'
+        });
       }
     }
 
-    // Sort by cost (optimized sort)
+    // Sort by cost
     shippingOptions.sort((a, b) => a.cost - b.cost);
 
     return NextResponse.json({
@@ -241,11 +232,11 @@ export async function POST(request: NextRequest) {
       destination: zoneInfo.name,
       zone,
       distance,
-      needsCargo: needsCargo(totalWeight),
+      needsCargo: isHeavy,
       shippingOptions,
       recommendations: {
-        heavyItem: needsCargo(totalWeight) ? 'Disarankan menggunakan Kurir Toko Kargo untuk barang >20kg' : null,
-        cheapest: shippingOptions.length > 0 ? shippingOptions[0].courier : null
+        heavyItem: isHeavy ? 'Disarankan menggunakan Kurir Toko Kargo untuk barang >20kg' : null,
+        cheapest: shippingOptions[0]?.courier
       }
     });
 

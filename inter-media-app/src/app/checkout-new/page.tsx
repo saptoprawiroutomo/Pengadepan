@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export default function CheckoutPage() {
   const [paymentInfo, setPaymentInfo] = useState<any[]>([]);
   const [shippingInfo, setShippingInfo] = useState<any>(null);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
+  const [shippingCache, setShippingCache] = useState<Map<string, any>>(new Map());
 
   useEffect(() => {
     // Suppress extension-related errors
@@ -152,7 +153,7 @@ export default function CheckoutPage() {
         if (data.items?.length > 0) {
           // Hanya hitung ongkir jika kota sudah dipilih
           if (selectedCity) {
-            calculateShipping(data.items);
+            debouncedCalculateShipping(data.items);
           }
         }
       }
@@ -175,17 +176,42 @@ export default function CheckoutPage() {
     }
   };
 
+  // Debounced shipping calculation
+  const debouncedCalculateShipping = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (cartItems: CartItem[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => calculateShipping(cartItems), 300);
+      };
+    })(),
+    [selectedCity]
+  );
+
   const calculateShipping = async (cartItems: CartItem[]) => {
     if (!selectedCity) return;
     
+    const totalWeight = cartItems.reduce((sum, item) => 
+      sum + ((item.productId.weight || 1000) * item.qty), 0
+    );
+    
+    // Check cache first
+    const cacheKey = `${selectedCity}-${totalWeight}`;
+    if (shippingCache.has(cacheKey)) {
+      const cached = shippingCache.get(cacheKey);
+      setShippingOptions(cached.shippingOptions || []);
+      setShippingInfo(cached);
+      const recommended = cached.shippingOptions?.find((opt: ShippingOption) => opt.recommended);
+      const selected = recommended || cached.shippingOptions?.[0];
+      if (selected) {
+        setSelectedShipping(selected);
+      }
+      return;
+    }
+    
     setIsCalculatingShipping(true);
-    setShippingOptions([]); // Clear previous options
     
     try {
-      const totalWeight = cartItems.reduce((sum, item) => 
-        sum + ((item.productId.weight || 1000) * item.qty), 0
-      );
-
       const response = await fetch('/api/shipping/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -197,8 +223,13 @@ export default function CheckoutPage() {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Cache the result
+        setShippingCache(prev => new Map(prev.set(cacheKey, data)));
+        
         setShippingOptions(data.shippingOptions || []);
         setShippingInfo(data);
+        
         // Auto select recommended or cheapest option
         const recommended = data.shippingOptions?.find((opt: ShippingOption) => opt.recommended);
         const selected = recommended || data.shippingOptions?.[0];
@@ -462,7 +493,7 @@ export default function CheckoutPage() {
                       setSelectedCity(value);
                       setShippingAddress({...shippingAddress, city: value});
                       if (cart.length > 0) {
-                        calculateShipping(cart);
+                        debouncedCalculateShipping(cart);
                       }
                     }}>
                       <SelectTrigger className="rounded-2xl">
@@ -550,6 +581,9 @@ export default function CheckoutPage() {
                       <span>📦 Total Berat: <strong>{shippingInfo.weightInKg}kg</strong></span>
                       <span>📍 Jarak: <strong>{shippingInfo.distance}km</strong></span>
                       <span>🎯 Zona: <strong>{shippingInfo.zone}</strong></span>
+                      {shippingCache.has(`${selectedCity}-${cart.reduce((sum, item) => sum + ((item.productId.weight || 1000) * item.qty), 0)}`) && (
+                        <span className="text-green-600">⚡ Cached</span>
+                      )}
                     </div>
                     {shippingInfo.recommendations?.heavyItem && (
                       <div className="mt-2 p-2 bg-orange-100 rounded text-sm text-orange-800">
@@ -560,10 +594,19 @@ export default function CheckoutPage() {
                 )}
                 
                 {isCalculatingShipping ? (
-                  <div className="text-center py-4">Menghitung ongkir...</div>
+                  <div className="text-center py-4">
+                    <div className="inline-flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      Menghitung ongkir...
+                    </div>
+                  </div>
                 ) : !selectedCity ? (
                   <div className="text-center py-4 text-muted-foreground">
                     Pilih kota tujuan untuk melihat opsi pengiriman
+                  </div>
+                ) : shippingOptions.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Tidak ada opsi pengiriman tersedia
                   </div>
                 ) : (
                   <div className="space-y-3">
