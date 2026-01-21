@@ -95,7 +95,9 @@ export default function AdminOrdersPage() {
 
   const handleShipping = (order: Order) => {
     setShippingOrder(order);
-    setTrackingData({ trackingNumber: '', courier: 'JNE' });
+    // Use courier from order instead of defaulting to JNE
+    const orderCourier = order.courier || 'JNE';
+    setTrackingData({ trackingNumber: '', courier: orderCourier });
     setIsTrackingDialogOpen(true);
   };
 
@@ -169,6 +171,7 @@ export default function AdminOrdersPage() {
                   <TableHead>Order Code</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Items</TableHead>
+                  <TableHead>Kurir</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Payment</TableHead>
                   <TableHead>Status</TableHead>
@@ -199,6 +202,14 @@ export default function AdminOrdersPage() {
                           {item.nameSnapshot || 'Product'} x{item.qty || 0}
                         </div>
                       )) || 'No items'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium">{order.courier || 'Belum dipilih'}</div>
+                        <div className="text-muted-foreground">
+                          Rp {order.shippingCost?.toLocaleString() || '0'}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>Rp {order.total?.toLocaleString()}</TableCell>
                     <TableCell>
@@ -336,27 +347,21 @@ export default function AdminOrdersPage() {
           <DialogHeader>
             <DialogTitle>Input Resi Pengiriman</DialogTitle>
             <DialogDescription>
-              Order: {shippingOrder?.orderCode}
+              Order: {shippingOrder?.orderCode}<br/>
+              Kurir yang dipilih customer: <strong>{shippingOrder?.courier || 'Tidak ada'}</strong>
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitTracking} className="space-y-4">
             <div>
               <Label htmlFor="courier">Kurir</Label>
-              <Select 
-                value={trackingData.courier} 
-                onValueChange={(value) => setTrackingData(prev => ({ ...prev, courier: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kurir" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="JNE">JNE</SelectItem>
-                  <SelectItem value="JNT">J&T Express</SelectItem>
-                  <SelectItem value="SICEPAT">SiCepat</SelectItem>
-                  <SelectItem value="ANTERAJA">AnterAja</SelectItem>
-                  <SelectItem value="NINJA">Ninja Express</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="p-3 bg-gray-50 rounded-lg border">
+                <span className="font-medium">{trackingData.courier}</span>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Kurir ini sudah dipilih oleh customer saat checkout
+                </p>
+              </div>
+              {/* Hidden input to maintain courier value */}
+              <input type="hidden" value={trackingData.courier} />
             </div>
             <div>
               <Label htmlFor="trackingNumber">Nomor Resi</Label>
