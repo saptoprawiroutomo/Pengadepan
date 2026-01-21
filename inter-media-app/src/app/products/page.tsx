@@ -58,7 +58,7 @@ function ProductsContent() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/admin/categories');
+      const response = await fetch('/api/categories');
       
       if (!response.ok) {
         console.error('Failed to fetch categories:', response.status);
@@ -194,7 +194,7 @@ function ProductsContent() {
               
               <div className="space-y-2">
                 <Badge variant="secondary" className="text-xs">
-                  {product.categoryId.name}
+                  {product.categoryId?.name || product.category?.name || 'Uncategorized'}
                 </Badge>
                 
                 <h3 className="font-semibold text-sm line-clamp-2">{product.name}</h3>

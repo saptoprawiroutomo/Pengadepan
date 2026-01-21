@@ -138,7 +138,7 @@ export default function ProductsPage() {
     
     reset({
       name: product.name,
-      categoryId: product.categoryId._id,
+      categoryId: product.categoryId?._id || product.category?._id || '',
       price: product.price,
       stock: product.stock,
       weight: product.weight || 0, // Add weight field
@@ -231,7 +231,7 @@ export default function ProductsPage() {
                     name="categoryId"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger className="rounded-2xl">
                           <SelectValue placeholder="Pilih kategori" />
                         </SelectTrigger>
@@ -380,7 +380,7 @@ export default function ProductsPage() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.categoryId.name}</TableCell>
+                  <TableCell>{product.categoryId?.name || product.category?.name || 'Uncategorized'}</TableCell>
                   <TableCell>Rp {product.price.toLocaleString('id-ID')}</TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>{product.weight || 0}g</TableCell>

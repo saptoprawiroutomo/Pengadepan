@@ -1,52 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
-import Order from '@/models/Order';
+import mongoose from 'mongoose';
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Extract ID from URL manually
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split('/');
-    const id = pathSegments[pathSegments.length - 1];
-    
-    console.log('PUT order request URL:', url.pathname);
-    console.log('Extracted order ID:', id);
-    
-    if (!id || id === 'route.ts') {
-      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
-    }
-    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const updateData = await request.json();
-    console.log('Updating order with data:', updateData);
+    const { status, trackingNumber, courier, shippedAt } = await request.json();
 
     await connectDB();
     
-    // Validate ObjectId
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return NextResponse.json({ error: 'Invalid order ID format' }, { status: 400 });
+    const updateData: any = { 
+      status,
+      updatedAt: new Date()
+    };
+
+    // Add timestamp based on status
+    switch (status) {
+      case 'confirmed':
+        updateData.confirmedAt = new Date();
+        break;
+      case 'processing':
+        updateData.processedAt = new Date();
+        break;
+      case 'shipped':
+        updateData.shippedAt = shippedAt || new Date();
+        if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (courier) updateData.courier = courier;
+        break;
+      case 'delivered':
+        updateData.deliveredAt = new Date();
+        break;
+      case 'completed':
+        updateData.completedAt = new Date();
+        break;
+      case 'payment_rejected':
+        updateData.paymentRejectedAt = new Date();
+        break;
     }
     
-    const order = await Order.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
+    const result = await mongoose.connection.db.collection('orders').updateOne(
+      { _id: new mongoose.Types.ObjectId(params.id) },
+      { $set: updateData }
     );
     
-    if (!order) {
-      return NextResponse.json({ error: 'Order tidak ditemukan' }, { status: 404 });
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
     
-    console.log('Order updated successfully:', order._id);
-    return NextResponse.json(order);
+    return NextResponse.json({ message: 'Order updated successfully' });
   } catch (error: any) {
-    console.error('Update order error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error updating order:', error);
+    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }
 }

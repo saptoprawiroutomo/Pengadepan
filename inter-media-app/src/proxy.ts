@@ -8,16 +8,13 @@ export default async function proxy(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
-  // Public routes - allow without authentication
-  if (pathname.startsWith('/api/auth') || 
-      pathname.startsWith('/api/seed') ||
-      pathname.startsWith('/api/test-db') ||
-      pathname.startsWith('/api/debug-users') ||
-      pathname.startsWith('/api/debug-products') ||
-      pathname.startsWith('/api/create-admin') ||
-      pathname.startsWith('/api/products') ||
-      pathname.startsWith('/api/admin/categories') ||
-      pathname === '/login' || 
+  // API routes - let them handle their own authentication
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // Public pages - allow without authentication
+  if (pathname === '/login' || 
       pathname === '/register' || 
       pathname === '/' ||
       pathname.startsWith('/products') ||

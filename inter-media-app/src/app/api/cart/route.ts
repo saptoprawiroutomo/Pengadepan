@@ -19,7 +19,8 @@ export async function GET() {
 
     return NextResponse.json(cart || { items: [] });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Cart API Error:', error);
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
   }
 }
 

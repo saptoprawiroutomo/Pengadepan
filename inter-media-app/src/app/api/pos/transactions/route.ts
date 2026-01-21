@@ -70,10 +70,12 @@ export async function POST(request: NextRequest) {
     const year = new Date().getFullYear();
     const sequence = await getNextSequence('TXN', year);
     const transactionCode = generateCode('TXN', year, sequence);
+    const receiptNumber = `POS-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
     // Create sales transaction
     const transaction = await SalesTransaction.create({
       transactionCode,
+      receiptNumber,
       cashierId: userSession.user.id,
       customerName: customerName || 'Walk-in Customer',
       items: transactionItems,

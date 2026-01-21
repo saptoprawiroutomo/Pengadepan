@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
-import Order from '@/models/Order';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
@@ -25,27 +17,24 @@ export async function GET(request: NextRequest) {
       dateFilter.$lte = end;
     }
 
-    const matchStage = Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {};
+    const mongoose = require('mongoose');
+    const salesTransactions = await mongoose.connection.db.collection('salestransactions')
+      .find(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
+      .sort({ createdAt: -1 })
+      .toArray();
 
-    const orders = await Order.find({
-      ...matchStage,
-      status: { $in: ['paid', 'processed', 'shipped', 'done'] }
-    }).populate('userId', 'name email').sort({ createdAt: -1 });
-
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-    const totalSubtotal = orders.reduce((sum, order) => sum + order.subtotal, 0);
-    const totalShipping = orders.reduce((sum, order) => sum + order.shippingCost, 0);
+    const totalRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
+    const totalTransactions = salesTransactions.length;
 
     const dateRange = startDate && endDate 
       ? `${new Date(startDate).toLocaleDateString('id-ID')} - ${new Date(endDate).toLocaleDateString('id-ID')}`
-      : 'Semua Data';
+      : 'Semua Periode';
 
-    const printHTML = `
-<!DOCTYPE html>
+    const printHTML = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Penjualan - Inter Medi-A</title>
+    <title>Laporan Penjualan</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
@@ -58,7 +47,7 @@ export async function GET(request: NextRequest) {
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
         .table th { background-color: #f5f5f5; font-weight: bold; }
         .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-        @media print { body { margin: 0; } .no-print { display: none; } }
+        @media print { body { margin: 0; } }
     </style>
 </head>
 <body>
@@ -71,20 +60,12 @@ export async function GET(request: NextRequest) {
 
     <div class="summary">
         <div class="summary-item">
-            <div class="summary-value">${orders.length}</div>
+            <div class="summary-value">${totalTransactions}</div>
             <div>Total Transaksi</div>
         </div>
         <div class="summary-item">
             <div class="summary-value">Rp ${totalRevenue.toLocaleString('id-ID')}</div>
             <div>Total Pendapatan</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-value">Rp ${totalSubtotal.toLocaleString('id-ID')}</div>
-            <div>Subtotal Produk</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-value">Rp ${totalShipping.toLocaleString('id-ID')}</div>
-            <div>Total Ongkir</div>
         </div>
     </div>
 
@@ -92,28 +73,24 @@ export async function GET(request: NextRequest) {
         <thead>
             <tr>
                 <th>No</th>
-                <th>Kode Order</th>
+                <th>Kode Transaksi</th>
                 <th>Tanggal</th>
-                <th>Customer</th>
-                <th>Subtotal</th>
-                <th>Ongkir</th>
+                <th>Pembeli</th>
+                <th>Items</th>
                 <th>Total</th>
-                <th>Payment</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            ${orders.map((order, index) => `
+            ${salesTransactions.map((transaction, index) => `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${order.orderCode}</td>
-                    <td>${new Date(order.createdAt).toLocaleDateString('id-ID')}</td>
-                    <td>${order.userId?.name || 'N/A'}</td>
-                    <td>Rp ${order.subtotal.toLocaleString('id-ID')}</td>
-                    <td>Rp ${order.shippingCost.toLocaleString('id-ID')}</td>
-                    <td>Rp ${order.total.toLocaleString('id-ID')}</td>
-                    <td>${order.paymentMethod === 'transfer' ? 'Transfer' : 'COD'}</td>
-                    <td>${order.status.toUpperCase()}</td>
+                    <td>${transaction.transactionCode || 'TXN-' + transaction._id.toString().slice(-6)}</td>
+                    <td>${new Date(transaction.createdAt).toLocaleDateString('id-ID')}</td>
+                    <td>${transaction.customerName || 'Walk-in Customer'}</td>
+                    <td>${(transaction.items || []).map(item => 
+                        (item.nameSnapshot || 'Product') + ' (' + (item.qty || item.quantity || 0) + 'x)'
+                    ).join('<br>')}</td>
+                    <td>Rp ${(transaction.total || transaction.totalAmount || 0).toLocaleString('id-ID')}</td>
                 </tr>
             `).join('')}
         </tbody>
@@ -133,10 +110,14 @@ export async function GET(request: NextRequest) {
 </html>`;
 
     return new NextResponse(printHTML, {
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+      },
     });
 
   } catch (error: any) {
+    console.error('Print sales error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

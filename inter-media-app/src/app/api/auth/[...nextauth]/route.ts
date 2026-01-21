@@ -69,6 +69,11 @@ const authOptions = {
       return session;
     },
     async redirect({ url, baseUrl }: any) {
+      // Allow API routes to work normally
+      if (url.startsWith('/api/')) {
+        return url;
+      }
+      
       console.log('Redirect callback - url:', url, 'baseUrl:', baseUrl);
       
       // Always use the configured NEXTAUTH_URL
@@ -112,7 +117,7 @@ const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: true
+        secure: false // Set to false for development
       }
     }
   },

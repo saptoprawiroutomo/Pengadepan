@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const salesTransactionSchema = new mongoose.Schema({
   transactionCode: { type: String, required: true, unique: true },
+  receiptNumber: { type: String, unique: true, sparse: true },
   cashierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   customerName: { type: String, default: 'Walk-in Customer' },
   items: [{

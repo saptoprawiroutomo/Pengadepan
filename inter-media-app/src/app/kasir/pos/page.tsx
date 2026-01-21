@@ -32,6 +32,8 @@ export default function POSPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [items, setItems] = useState<POSItem[]>([]);
@@ -74,18 +76,34 @@ export default function POSPage() {
       
       // Handle successful response
       if (Array.isArray(data)) {
-        setProducts(data.filter((p: Product) => p.stock > 0));
+        const availableProducts = data.filter((p: Product) => p.stock > 0);
+        setProducts(availableProducts);
+        setFilteredProducts(availableProducts);
       } else {
         console.error('Products data is not an array:', data);
         setProducts([]);
+        setFilteredProducts([]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Filter products based on search term
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchTerm, products]);
 
   const addItem = () => {
     if (!selectedProductId) return;
@@ -246,22 +264,44 @@ export default function POSPage() {
             <CardTitle>Tambah Produk</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
-              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="flex-1 rounded-2xl">
-                  <SelectValue placeholder="Pilih produk" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product._id} value={product._id}>
-                      {product.name} - Rp {product.price.toLocaleString('id-ID')} (Stok: {product.stock})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={addItem} disabled={!selectedProductId} className="rounded-2xl">
-                <Plus className="h-4 w-4" />
-              </Button>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="searchProduct">Cari Produk</Label>
+                <Input
+                  id="searchProduct"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Ketik nama produk..."
+                  className="rounded-2xl"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                  <SelectTrigger className="flex-1 rounded-2xl">
+                    <SelectValue placeholder="Pilih produk" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredProducts.map((product) => (
+                      <SelectItem key={product._id} value={product._id}>
+                        <div className="flex justify-between items-center w-full">
+                          <span className="truncate max-w-[200px]">{product.name}</span>
+                          <span className="ml-2 text-sm text-gray-500">
+                            Rp {product.price.toLocaleString('id-ID')} (Stok: {product.stock})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={addItem} 
+                  disabled={!selectedProductId} 
+                  className="rounded-2xl px-4 whitespace-nowrap"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Tambah
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

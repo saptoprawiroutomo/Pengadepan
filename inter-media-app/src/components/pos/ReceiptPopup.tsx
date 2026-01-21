@@ -167,14 +167,11 @@ export default function ReceiptPopup({ isOpen, onClose, receiptData }: ReceiptPo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle>
             Receipt
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
           <DialogDescription>
-            Struk pembayaran untuk transaksi #{receiptData.transactionId}
+            Struk pembayaran untuk transaksi #{receiptData.transactionCode}
           </DialogDescription>
         </DialogHeader>
 

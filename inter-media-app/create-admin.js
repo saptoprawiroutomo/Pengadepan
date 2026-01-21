@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Connect to MongoDB
-mongoose.connect('mongodb+srv://saptoprawiroutomo_db_user:1234qwer@cluster0.z3wyzso.mongodb.net/intermediadb?retryWrites=true&w=majority&appName=Cluster0');
+// Connect to MongoDB (same as .env.local)
+mongoose.connect('mongodb://localhost:27017/inter-media-app');
 
 // User schema
 const userSchema = new mongoose.Schema({

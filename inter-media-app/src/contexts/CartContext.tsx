@@ -27,9 +27,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const cart = await response.json();
           const count = cart.items?.reduce((total: number, item: any) => total + item.qty, 0) || 0;
           setCartCount(count);
+        } else {
+          console.error('Failed to fetch cart:', response.status);
+          setCartCount(0);
         }
       } catch (error) {
-        console.error('Error fetching cart:', error);
+        console.error('Cart fetch error:', error);
+        setCartCount(0);
       }
     } else {
       setCartCount(0);

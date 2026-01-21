@@ -240,7 +240,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="h-8 w-8 text-primary" />
                         <div>
-                          <p className="text-2xl font-bold">{salesData.summary.totalTransactions}</p>
+                          <p className="text-2xl font-bold">{salesData?.summary?.totalTransactions || 0}</p>
                           <p className="text-sm text-muted-foreground">Total Transaksi</p>
                         </div>
                       </div>
@@ -252,7 +252,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="h-8 w-8 text-green-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp {salesData.summary.totalRevenue.toLocaleString('id-ID')}</p>
+                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.totalRevenue || 0).toLocaleString('id-ID')}</p>
                           <p className="text-sm text-muted-foreground">Total Pendapatan</p>
                         </div>
                       </div>
@@ -264,8 +264,8 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-blue-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp {salesData.summary.totalSubtotal.toLocaleString('id-ID')}</p>
-                          <p className="text-sm text-muted-foreground">Subtotal Produk</p>
+                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.totalRevenue || 0).toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Total Penjualan</p>
                         </div>
                       </div>
                     </CardContent>
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-purple-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp {salesData.summary.averageOrderValue.toLocaleString('id-ID')}</p>
+                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.averageOrderValue || 0).toLocaleString('id-ID')}</p>
                           <p className="text-sm text-muted-foreground">Rata-rata Order</p>
                         </div>
                       </div>
@@ -298,11 +298,56 @@ export default function ReportsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {salesData.dailySales.map((day: any, index: number) => (
+                        {(salesData?.dailySales || []).map((day: any, index: number) => (
                           <TableRow key={index}>
-                            <TableCell>{day._id.day}/{day._id.month}/{day._id.year}</TableCell>
-                            <TableCell>{day.transactionCount}</TableCell>
-                            <TableCell>Rp {day.totalSales.toLocaleString('id-ID')}</TableCell>
+                            <TableCell>{day.date || 'N/A'}</TableCell>
+                            <TableCell>{day.orderCount || 0}</TableCell>
+                            <TableCell>Rp {(day.totalSales || 0).toLocaleString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Detail Transaksi */}
+                <Card className="rounded-2xl">
+                  <CardHeader>
+                    <CardTitle>Detail Transaksi POS</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Kode Transaksi</TableHead>
+                          <TableHead>Tanggal</TableHead>
+                          <TableHead>Pembeli</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(salesData?.transactions || []).map((transaction: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">
+                              {transaction.transactionCode || `TXN-${transaction._id?.toString().slice(-6)}`}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(transaction.createdAt).toLocaleDateString('id-ID')}
+                            </TableCell>
+                            <TableCell>{transaction.customerName || 'Walk-in Customer'}</TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {(transaction.items || []).map((item: any, i: number) => (
+                                  <div key={i} className="mb-1">
+                                    {item.nameSnapshot || 'Product'} ({item.qty || item.quantity || 0}x)
+                                  </div>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              Rp {(transaction.total || transaction.totalAmount || 0).toLocaleString('id-ID')}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
