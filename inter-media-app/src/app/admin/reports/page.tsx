@@ -56,7 +56,7 @@ export default function ReportsPage() {
       console.log('API URL:', `/api/reports/sales?${params}`);
 
       const [salesRes, servicesRes, stockRes, topProductsRes] = await Promise.all([
-        fetch(`/api/reports/sales?${params}`),
+        fetch(`/api/reports/sales?${params}&_t=${Date.now()}`), // Add cache buster
         fetch(`/api/reports/services?${params}`),
         fetch('/api/reports/stock'),
         fetch('/api/reports/top-products')
