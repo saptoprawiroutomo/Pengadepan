@@ -47,10 +47,17 @@ export async function GET(request: NextRequest) {
       .toArray();
     
     console.log('Found completed orders:', completedOrders.length);
+    console.log('Sample order:', completedOrders[0]);
     
     // Calculate summary from both POS and online orders
     const posRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
-    const onlineRevenue = completedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+    const onlineRevenue = completedOrders.reduce((sum, order) => {
+      console.log('Processing order:', order.orderCode, 'total:', order.total);
+      return sum + (order.total || 0);
+    }, 0);
+    
+    console.log('POS Revenue:', posRevenue);
+    console.log('Online Revenue:', onlineRevenue);
     
     const totalRevenue = posRevenue + onlineRevenue;
     const totalTransactions = salesTransactions.length + completedOrders.length;
