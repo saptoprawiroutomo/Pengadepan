@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     
     console.log('Found sales transactions:', salesTransactions.length);
     
-    // Get completed orders (include pending, confirmed, shipped, and delivered)
+    // Get completed orders - REMOVE status filter temporarily for debugging
     console.log('Querying orders with filter:', dateFilter);
     
     const allOrders = await mongoose.connection.db.collection('orders')
@@ -48,15 +48,8 @@ export async function GET(request: NextRequest) {
       console.log(`Order ${order.orderCode}: status=${order.status}, total=${order.total}`);
     });
     
-    const completedOrders = await mongoose.connection.db.collection('orders')
-      .find({ 
-        ...dateFilter,
-        status: { 
-          $in: ['pending', 'confirmed', 'shipped', 'delivered'] 
-        } 
-      })
-      .sort({ createdAt: -1 })
-      .toArray();
+    // Use ALL orders for calculation instead of filtering by status
+    const completedOrders = allOrders;
     
     // Calculate summary from both POS and online orders
     const posRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
