@@ -53,7 +53,7 @@ export default function ReportsPage() {
       if (endDate) params.append('endDate', endDate);
 
       const [salesRes, servicesRes, stockRes, topProductsRes] = await Promise.all([
-        fetch(`/api/reports/sales?${params}`),
+        fetch(`/api/reports/sales-v2?${params}`), // Use new endpoint
         fetch(`/api/reports/services?${params}`),
         fetch('/api/reports/stock'),
         fetch('/api/reports/top-products')
