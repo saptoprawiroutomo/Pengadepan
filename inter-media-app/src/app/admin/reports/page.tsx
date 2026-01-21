@@ -24,12 +24,13 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!session) return;
+    // Temporarily disable auth check for debugging
+    // if (!session) return;
     
-    if (!['admin', 'kasir'].includes(session.user.role)) {
-      router.push('/');
-      return;
-    }
+    // if (!['admin', 'kasir'].includes(session.user.role)) {
+    //   router.push('/');
+    //   return;
+    // }
 
     // Set default date range (last 30 days)
     const today = new Date();
