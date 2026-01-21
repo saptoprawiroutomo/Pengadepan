@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily disable auth for testing
+    // Temporarily disable auth for debugging
     // const session = await getServerSession(authOptions);
     // if (!session || session.user.role !== 'admin') {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -14,19 +14,32 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    // Build date filter
+    let dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter = { createdAt: {} };
+      if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+      if (endDate) dateFilter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
+    }
+
     // Get sales transactions
     const salesTransactions = await mongoose.connection.db.collection('salestransactions')
-      .find({})
+      .find(dateFilter)
       .sort({ createdAt: -1 })
       .toArray();
     
     console.log('Found sales transactions:', salesTransactions.length);
     
-    // Get completed orders (include confirmed, shipped, and delivered)
+    // Get completed orders (include pending, confirmed, shipped, and delivered)
     const completedOrders = await mongoose.connection.db.collection('orders')
       .find({ 
+        ...dateFilter,
         status: { 
-          $in: ['confirmed', 'shipped', 'delivered'] 
+          $in: ['pending', 'confirmed', 'shipped', 'delivered'] 
         } 
       })
       .sort({ createdAt: -1 })
