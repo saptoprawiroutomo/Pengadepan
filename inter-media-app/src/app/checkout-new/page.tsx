@@ -58,6 +58,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [paymentInfo, setPaymentInfo] = useState<any[]>([]);
   const [shippingInfo, setShippingInfo] = useState<any>(null);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
   useEffect(() => {
     // Suppress extension-related errors
