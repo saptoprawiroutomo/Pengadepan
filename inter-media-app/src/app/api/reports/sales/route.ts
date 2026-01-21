@@ -58,14 +58,14 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .toArray();
     
-    console.log('Found completed orders:', completedOrders.length);
-    console.log('Sample order:', completedOrders[0]);
-    
     // Calculate summary from both POS and online orders
     const posRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
+    
+    console.log('Completed orders for calculation:', completedOrders.length);
     const onlineRevenue = completedOrders.reduce((sum, order) => {
-      console.log('Processing order:', order.orderCode, 'total:', order.total);
-      return sum + (order.total || 0);
+      const orderTotal = Number(order.total) || 0;
+      console.log(`Order ${order.orderCode}: total=${orderTotal}`);
+      return sum + orderTotal;
     }, 0);
     
     console.log('POS Revenue:', posRevenue);
@@ -75,9 +75,9 @@ export async function GET(request: NextRequest) {
     const totalTransactions = salesTransactions.length + completedOrders.length;
     
     const posItems = salesTransactions.reduce((sum, sale) => 
-      sum + (sale.items?.reduce((itemSum, item) => itemSum + (item.qty || item.quantity || 0), 0) || 0), 0);
+      sum + (sale.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || Number(item.quantity) || 0), 0) || 0), 0);
     const onlineItems = completedOrders.reduce((sum, order) => 
-      sum + (order.items?.reduce((itemSum, item) => itemSum + (item.qty || 0), 0) || 0), 0);
+      sum + (order.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || 0), 0) || 0), 0);
     
     const totalItems = posItems + onlineItems;
     
