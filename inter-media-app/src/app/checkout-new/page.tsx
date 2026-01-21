@@ -177,15 +177,23 @@ export default function CheckoutPage() {
   };
 
   const calculateShipping = useCallback(async (cartItems: CartItem[]) => {
-    if (!selectedCity) return;
+    console.log('calculateShipping called with:', { selectedCity, cartItemsLength: cartItems.length });
+    
+    if (!selectedCity) {
+      console.log('No city selected, skipping calculation');
+      return;
+    }
     
     const totalWeight = cartItems.reduce((sum, item) => 
       sum + ((item.productId.weight || 1000) * item.qty), 0
     );
     
+    console.log('Calculated total weight:', totalWeight);
+    
     // Check cache first
     const cacheKey = `${selectedCity}-${totalWeight}`;
     if (shippingCache.has(cacheKey)) {
+      console.log('Using cached result for:', cacheKey);
       const cached = shippingCache.get(cacheKey);
       setShippingOptions(cached.shippingOptions || []);
       setShippingInfo(cached);
@@ -197,6 +205,7 @@ export default function CheckoutPage() {
       return;
     }
     
+    console.log('Making API call for shipping calculation...');
     setIsCalculatingShipping(true);
     
     try {
@@ -209,8 +218,11 @@ export default function CheckoutPage() {
         })
       });
 
+      console.log('API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('API response data:', data);
         
         // Cache the result
         setShippingCache(prev => new Map(prev.set(cacheKey, data)));
@@ -223,9 +235,10 @@ export default function CheckoutPage() {
         const selected = recommended || data.shippingOptions?.[0];
         if (selected) {
           setSelectedShipping(selected);
+          console.log('Auto-selected shipping:', selected.courier);
         }
       } else {
-        console.error('Shipping calculation failed');
+        console.error('Shipping calculation failed with status:', response.status);
         setShippingOptions([]);
       }
     } catch (error) {
@@ -233,6 +246,7 @@ export default function CheckoutPage() {
       setShippingOptions([]);
     } finally {
       setIsCalculatingShipping(false);
+      console.log('Shipping calculation completed');
     }
   }, [selectedCity, shippingCache]);
 
@@ -468,9 +482,12 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="province">Provinsi</Label>
-                    <Select value={shippingAddress.province} onValueChange={(value) => 
-                      setShippingAddress({...shippingAddress, province: value})
-                    }>
+                    <Select 
+                      value={shippingAddress.province || ''} 
+                      onValueChange={(value) => 
+                        setShippingAddress({...shippingAddress, province: value})
+                      }
+                    >
                       <SelectTrigger className="rounded-2xl">
                         <SelectValue placeholder="Pilih provinsi" />
                       </SelectTrigger>
@@ -489,13 +506,17 @@ export default function CheckoutPage() {
                   
                   <div>
                     <Label htmlFor="city">Kota/Kabupaten</Label>
-                    <Select value={selectedCity} onValueChange={(value) => {
-                      setSelectedCity(value);
-                      setShippingAddress({...shippingAddress, city: value});
-                      if (cart.length > 0) {
-                        debouncedCalculateShipping(cart);
-                      }
-                    }}>
+                    <Select 
+                      value={selectedCity || ''} 
+                      onValueChange={(value) => {
+                        console.log('City selected:', value);
+                        setSelectedCity(value);
+                        setShippingAddress({...shippingAddress, city: value});
+                        if (cart.length > 0) {
+                          debouncedCalculateShipping(cart);
+                        }
+                      }}
+                    >
                       <SelectTrigger className="rounded-2xl">
                         <SelectValue placeholder="Pilih kota" />
                       </SelectTrigger>
@@ -611,8 +632,9 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="space-y-3">
                     <RadioGroup 
-                      value={selectedShipping?.courier} 
+                      value={selectedShipping?.courier || ''} 
                       onValueChange={(value) => {
+                        console.log('Shipping selected:', value);
                         const option = shippingOptions.find(opt => opt.courier === value);
                         setSelectedShipping(option || null);
                       }}
