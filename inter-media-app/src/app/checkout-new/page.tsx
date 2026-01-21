@@ -111,16 +111,16 @@ export default function CheckoutPage() {
 
   const fillAddressForm = (address: any) => {
     setShippingAddress({
-      receiverName: address.receiverName,
-      phone: address.phone,
-      province: address.province,
-      city: address.city,
-      district: address.district,
-      postalCode: address.postalCode,
-      fullAddress: address.fullAddress,
-      addressLabel: address.label
+      receiverName: address.receiverName || '',
+      phone: address.phone || '',
+      province: address.province || '',
+      city: address.city || '',
+      district: address.district || '',
+      postalCode: address.postalCode || '',
+      fullAddress: address.fullAddress || '',
+      addressLabel: address.label || 'Rumah'
     });
-    setSelectedCity(address.city);
+    setSelectedCity(address.city || '');
   };
 
   const fillKtpAddress = () => {
