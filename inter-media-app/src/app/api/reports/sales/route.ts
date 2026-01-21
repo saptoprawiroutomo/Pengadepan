@@ -15,14 +15,18 @@ export async function GET(request: NextRequest) {
     console.log('Raw MongoDB query - Found orders:', orders.length);
     
     // Calculate summary from all orders
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    const totalRevenue = orders.reduce((sum, order) => {
+      console.log(`Processing order ${order.orderCode}: total=${order.total}`);
+      return sum + (Number(order.total) || 0);
+    }, 0);
     const totalTransactions = orders.length;
     const totalItems = orders.reduce((sum, order) => {
-      return sum + (order.items?.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0) || 0);
+      const itemCount = order.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || Number(item.quantity) || 0), 0) || 0;
+      return sum + itemCount;
     }, 0);
     const averageOrderValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
-    console.log('Calculated totals:', { totalRevenue, totalTransactions });
+    console.log('Calculated totals:', { totalRevenue, totalTransactions, totalItems });
 
     const summary = {
       totalRevenue,
