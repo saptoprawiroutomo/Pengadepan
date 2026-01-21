@@ -96,10 +96,22 @@ export default function CheckoutPage() {
         const defaultAddress = data.addresses?.find((addr: any) => addr.isDefault);
         if (defaultAddress) {
           fillAddressForm(defaultAddress);
+          // Trigger shipping calculation after address is filled
+          setTimeout(() => {
+            if (cart.length > 0 && defaultAddress.city) {
+              debouncedCalculateShipping(cart);
+            }
+          }, 500);
         } else if ((session?.user as any)?.address) {
           // Use KTP address as fallback
           setUseKtpAddress(true);
           fillKtpAddress();
+          // Trigger shipping calculation for KTP address
+          setTimeout(() => {
+            if (cart.length > 0) {
+              debouncedCalculateShipping(cart);
+            }
+          }, 500);
         }
       }
     } catch (error) {
@@ -152,7 +164,8 @@ export default function CheckoutPage() {
         
         if (data.items?.length > 0) {
           // Hanya hitung ongkir jika kota sudah dipilih
-          if (selectedCity) {
+          if (selectedCity && cart.length > 0) {
+            console.log('Auto-triggering shipping calculation on cart load');
             debouncedCalculateShipping(data.items);
           }
         }
@@ -646,8 +659,22 @@ export default function CheckoutPage() {
                     Pilih kota tujuan untuk melihat opsi pengiriman
                   </div>
                 ) : shippingOptions.length === 0 ? (
-                  <div className="text-center py-4 text-muted-foreground">
-                    Tidak ada opsi pengiriman tersedia
+                  <div className="text-center py-4">
+                    <div className="text-muted-foreground mb-2">
+                      Tidak ada opsi pengiriman tersedia
+                    </div>
+                    {selectedCity && cart.length > 0 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          console.log('Manual refresh shipping options');
+                          debouncedCalculateShipping(cart);
+                        }}
+                      >
+                        Refresh Opsi Pengiriman
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
