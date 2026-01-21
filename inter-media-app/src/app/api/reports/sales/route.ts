@@ -36,6 +36,18 @@ export async function GET(request: NextRequest) {
     console.log('Found sales transactions:', salesTransactions.length);
     
     // Get completed orders (include pending, confirmed, shipped, and delivered)
+    console.log('Querying orders with filter:', dateFilter);
+    
+    const allOrders = await mongoose.connection.db.collection('orders')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    console.log('All orders found:', allOrders.length);
+    allOrders.forEach(order => {
+      console.log(`Order ${order.orderCode}: status=${order.status}, total=${order.total}`);
+    });
+    
     const completedOrders = await mongoose.connection.db.collection('orders')
       .find({ 
         ...dateFilter,
