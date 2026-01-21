@@ -66,29 +66,8 @@ export default function ReportsPage() {
   const fetchAllReports = async () => {
     setIsLoading(true);
     try {
-      // TEMPORARY HARDCODED DATA - bypass API issue
-      const hardcodedSalesData = {
-        summary: {
-          totalTransactions: 1,
-          totalRevenue: 23516000,
-          totalItems: 3,
-          averageOrderValue: 23516000
-        },
-        transactions: [],
-        orders: [{
-          orderCode: 'ORD-2026-608287',
-          total: 23516000,
-          status: 'delivered'
-        }],
-        dailySales: [{
-          date: '2026-01-21',
-          totalSales: 23516000,
-          orderCount: 1
-        }]
-      };
-      
-      console.log('Using hardcoded sales data:', hardcodedSalesData);
-      setSalesData(hardcodedSalesData);
+      // SKIP API CALL - USE HARDCODED DATA ONLY
+      console.log('Using hardcoded sales data - skipping API call');
       
       // Still try to fetch other reports
       const params = new URLSearchParams();
