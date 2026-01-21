@@ -52,8 +52,11 @@ export default function ReportsPage() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
+      console.log('Frontend sending params:', { startDate, endDate });
+      console.log('API URL:', `/api/reports/sales?${params}`);
+
       const [salesRes, servicesRes, stockRes, topProductsRes] = await Promise.all([
-        fetch(`/api/reports/sales?${params}`), // Back to original endpoint
+        fetch(`/api/reports/sales?${params}`),
         fetch(`/api/reports/services?${params}`),
         fetch('/api/reports/stock'),
         fetch('/api/reports/top-products')
@@ -62,7 +65,10 @@ export default function ReportsPage() {
       if (salesRes.ok) {
         const salesResult = await salesRes.json();
         console.log('Sales data received:', salesResult);
+        console.log('Summary:', salesResult.summary);
         setSalesData(salesResult);
+      } else {
+        console.error('Sales API error:', salesRes.status);
       }
       if (servicesRes.ok) setServicesData(await servicesRes.json());
       if (stockRes.ok) setStockData(await stockRes.json());
