@@ -55,9 +55,21 @@ export async function GET(request: NextRequest) {
     const posRevenue = salesTransactions.reduce((sum, sale) => sum + (sale.total || sale.totalAmount || 0), 0);
     
     console.log('Completed orders for calculation:', completedOrders.length);
+    
+    // Manual calculation for debugging
+    let manualTotal = 0;
+    completedOrders.forEach(order => {
+      console.log(`Manual calc - Order ${order.orderCode}: total=${order.total}, type=${typeof order.total}`);
+      if (order.total) {
+        manualTotal += Number(order.total);
+      }
+    });
+    
+    console.log('Manual total calculation:', manualTotal);
+    
     const onlineRevenue = completedOrders.reduce((sum, order) => {
       const orderTotal = Number(order.total) || 0;
-      console.log(`Order ${order.orderCode}: total=${orderTotal}`);
+      console.log(`Reduce calc - Order ${order.orderCode}: total=${orderTotal}`);
       return sum + orderTotal;
     }, 0);
     
