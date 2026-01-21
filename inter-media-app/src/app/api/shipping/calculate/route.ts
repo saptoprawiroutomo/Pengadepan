@@ -1,36 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Data kota/kabupaten dengan zona ongkir
+// Data kota/kabupaten dengan zona ongkir dan estimasi jarak
 const SHIPPING_ZONES = {
   // Zona 1: Dalam kota (terdekat)
-  'jakarta-pusat': { zone: 1, name: 'Jakarta Pusat' },
-  'jakarta-utara': { zone: 1, name: 'Jakarta Utara' },
-  'jakarta-selatan': { zone: 1, name: 'Jakarta Selatan' },
-  'jakarta-barat': { zone: 1, name: 'Jakarta Barat' },
-  'jakarta-timur': { zone: 1, name: 'Jakarta Timur' },
+  'jakarta-pusat': { zone: 1, name: 'Jakarta Pusat', distance: 5 },
+  'jakarta-utara': { zone: 1, name: 'Jakarta Utara', distance: 8 },
+  'jakarta-selatan': { zone: 1, name: 'Jakarta Selatan', distance: 7 },
+  'jakarta-barat': { zone: 1, name: 'Jakarta Barat', distance: 6 },
+  'jakarta-timur': { zone: 1, name: 'Jakarta Timur', distance: 9 },
   
   // Zona 2: Jabodetabek
-  'bogor': { zone: 2, name: 'Bogor' },
-  'depok': { zone: 2, name: 'Depok' },
-  'tangerang': { zone: 2, name: 'Tangerang' },
-  'bekasi': { zone: 2, name: 'Bekasi' },
+  'bogor': { zone: 2, name: 'Bogor', distance: 35 },
+  'depok': { zone: 2, name: 'Depok', distance: 25 },
+  'tangerang': { zone: 2, name: 'Tangerang', distance: 30 },
+  'bekasi': { zone: 2, name: 'Bekasi', distance: 28 },
   
   // Zona 3: Jawa Barat
-  'bandung': { zone: 3, name: 'Bandung' },
-  'cirebon': { zone: 3, name: 'Cirebon' },
-  'sukabumi': { zone: 3, name: 'Sukabumi' },
+  'bandung': { zone: 3, name: 'Bandung', distance: 150 },
+  'cirebon': { zone: 3, name: 'Cirebon', distance: 250 },
+  'sukabumi': { zone: 3, name: 'Sukabumi', distance: 120 },
   
   // Zona 4: Pulau Jawa
-  'surabaya': { zone: 4, name: 'Surabaya' },
-  'yogyakarta': { zone: 4, name: 'Yogyakarta' },
-  'semarang': { zone: 4, name: 'Semarang' },
-  'malang': { zone: 4, name: 'Malang' },
+  'surabaya': { zone: 4, name: 'Surabaya', distance: 800 },
+  'yogyakarta': { zone: 4, name: 'Yogyakarta', distance: 560 },
+  'semarang': { zone: 4, name: 'Semarang', distance: 450 },
+  'malang': { zone: 4, name: 'Malang', distance: 850 },
   
   // Zona 5: Luar Jawa
-  'medan': { zone: 5, name: 'Medan' },
-  'palembang': { zone: 5, name: 'Palembang' },
-  'makassar': { zone: 5, name: 'Makassar' },
-  'balikpapan': { zone: 5, name: 'Balikpapan' }
+  'medan': { zone: 5, name: 'Medan', distance: 1400 },
+  'palembang': { zone: 5, name: 'Palembang', distance: 650 },
+  'makassar': { zone: 5, name: 'Makassar', distance: 1500 },
+  'balikpapan': { zone: 5, name: 'Balikpapan', distance: 1200 }
 };
 
 // Tarif ongkir per zona dan per kg
@@ -67,29 +67,72 @@ const SHIPPING_RATES = {
   }
 };
 
-// Kurir toko untuk zona 1 dan 2 saja
+// Kurir toko dengan logika berat dan jarak baru
 const STORE_COURIER_RATES = {
   'KURIR TOKO': {
-    zone1: 5000, // Dalam kota Jakarta
-    zone2: 8000, // Jabodetabek
-    perKm: 1000, // Tambahan per km
+    baseRate: 10000, // Base rate 1kg, 1km = 10rb
+    perKmRate: 1000, // 10% dari base = 1rb per km
+    cargoRate: 500000, // 500rb untuk >20kg
+    cargoDistanceThreshold: 20, // km
+    cargoDistanceRate: 100000, // +100rb jika >20km
+    maxRegularWeight: 20000, // 20kg threshold
     estimatedDays: { zone1: 'Same Day', zone2: '1 hari' }
   }
 };
 
-// GoSend untuk Jabodetabek (zona 1 dan 2)
+// Fungsi untuk menghitung ongkir berdasarkan jarak dan berat
+function calculateDistanceBasedShipping(baseRate: number, perKmRate: number, distance: number, weightInKg: number) {
+  const distanceCharge = distance * perKmRate;
+  const weightMultiplier = Math.max(1, weightInKg); // Minimum 1kg
+  return Math.round(baseRate + (distanceCharge * weightMultiplier));
+}
+
+// Fungsi untuk menentukan apakah perlu kargo
+function needsCargo(totalWeight: number) {
+  return totalWeight > 20000; // >20kg
+}
+
+// Fungsi untuk menghitung kurir toko
+function calculateStoreCourier(distance: number, totalWeight: number) {
+  const rates = STORE_COURIER_RATES['KURIR TOKO'];
+  
+  if (needsCargo(totalWeight)) {
+    // Kargo rate: 500rb + jarak charge jika >20km
+    let cost = rates.cargoRate;
+    if (distance > rates.cargoDistanceThreshold) {
+      cost += rates.cargoDistanceRate;
+    }
+    return {
+      cost,
+      description: `Kurir Toko Kargo - ${Math.round(totalWeight/1000)}kg - ${distance}km`,
+      type: 'kargo'
+    };
+  } else {
+    // Regular rate: base + distance charge
+    const weightInKg = Math.ceil(totalWeight / 1000);
+    const cost = calculateDistanceBasedShipping(rates.baseRate, rates.perKmRate, distance, weightInKg);
+    return {
+      cost,
+      description: `Kurir Toko - ${weightInKg}kg - ${distance}km`,
+      type: 'kurir-toko'
+    };
+  }
+}
+// GoSend untuk Jabodetabek (zona 1 dan 2) dengan distance-based pricing
 const GOSEND_RATES = {
   'GOSEND INSTANT': {
-    zone1: { base: 15000, perKm: 2500, maxKm: 25 }, // Jakarta: 15rb + 2.5rb/km
-    zone2: { base: 20000, perKm: 3000, maxKm: 40 }, // Jabodetabek: 20rb + 3rb/km
-    estimatedDays: { zone1: '1-2 jam', zone2: '2-4 jam' },
-    maxWeight: 20000 // Max 20kg
+    baseRate: 15000, // Base rate
+    perKmRate: 2500, // Per km charge
+    maxWeight: 20000, // Max 20kg
+    maxDistance: 25, // Max distance
+    estimatedDays: { zone1: '1-2 jam', zone2: '2-4 jam' }
   },
   'GOSEND SAME DAY': {
-    zone1: { base: 12000, perKm: 2000, maxKm: 25 }, // Jakarta: 12rb + 2rb/km
-    zone2: { base: 15000, perKm: 2500, maxKm: 40 }, // Jabodetabek: 15rb + 2.5rb/km
-    estimatedDays: { zone1: '4-8 jam', zone2: '6-12 jam' },
-    maxWeight: 20000 // Max 20kg
+    baseRate: 12000, // Base rate
+    perKmRate: 2000, // Per km charge
+    maxWeight: 20000, // Max 20kg
+    maxDistance: 40, // Max distance
+    estimatedDays: { zone1: '4-8 jam', zone2: '6-12 jam' }
   }
 };
 
@@ -117,67 +160,70 @@ export async function POST(request: NextRequest) {
     // Konversi gram ke kg (minimum 1kg) - optimized calculation
     const weightInKg = Math.max(1, Math.ceil(totalWeight / 1000));
     const zone = zoneInfo.zone;
+    const distance = zoneInfo.distance;
 
     // Pre-allocate array for better performance
     const shippingOptions = [];
 
-    // Ekspedisi reguler - optimized loop
+    // Ekspedisi reguler dengan distance-based pricing
     for (const [courier, rates] of Object.entries(SHIPPING_RATES)) {
       const baseRate = rates[`zone${zone}` as keyof typeof rates] as number;
       const perKgRate = rates.perKg[`zone${zone}` as keyof typeof rates.perKg] as number;
       const estimatedDays = rates.estimatedDays[`zone${zone}` as keyof typeof rates.estimatedDays] as string;
       
-      const cost = baseRate + (perKgRate * (weightInKg - 1));
+      // Apply distance-based pricing (10% increase per km for long distance)
+      let cost = baseRate + (perKgRate * (weightInKg - 1));
+      if (distance > 50) { // Long distance adjustment
+        const distanceMultiplier = 1 + ((distance - 50) * 0.01); // 1% per km after 50km
+        cost = Math.round(cost * distanceMultiplier);
+      }
+      
+      // Filter out unsuitable options for heavy items
+      if (needsCargo(totalWeight) && !courier.includes('KARGO')) {
+        continue; // Skip regular expedisi for >20kg
+      }
       
       shippingOptions.push({
         courier,
         service: 'REG',
         cost,
         estimatedDays,
-        description: `${courier} - ${estimatedDays} hari - ${zoneInfo.name}`,
+        description: `${courier} - ${estimatedDays} hari - ${zoneInfo.name} (${weightInKg}kg, ${distance}km)`,
         type: 'ekspedisi'
       });
     }
 
-    // Kurir toko hanya untuk zona 1 dan 2 - conditional check
+    // Kurir toko untuk zona 1 dan 2 dengan logika berat dan jarak baru
     if (zone <= 2) {
-      const storeRates = STORE_COURIER_RATES['KURIR TOKO'];
-      const baseRate = zone === 1 ? storeRates.zone1 : storeRates.zone2;
-      const estimatedDays = storeRates.estimatedDays[`zone${zone}` as keyof typeof storeRates.estimatedDays];
-      
-      // Estimasi jarak berdasarkan zona (pre-calculated)
-      const estimatedDistance = zone === 1 ? 5 : 15;
-      const cost = baseRate + (estimatedDistance * storeRates.perKm);
+      const storeResult = calculateStoreCourier(distance, totalWeight);
+      const estimatedDays = STORE_COURIER_RATES['KURIR TOKO'].estimatedDays[`zone${zone}` as keyof typeof STORE_COURIER_RATES['KURIR TOKO'].estimatedDays];
       
       shippingOptions.push({
         courier: 'KURIR TOKO',
-        service: 'ANTAR',
-        cost,
+        service: storeResult.type === 'kargo' ? 'KARGO' : 'ANTAR',
+        cost: storeResult.cost,
         estimatedDays,
-        description: `Kurir Toko - ${estimatedDays} - ${zoneInfo.name} (~${estimatedDistance}km)`,
-        type: 'kurir-toko'
+        description: storeResult.description,
+        type: storeResult.type,
+        recommended: needsCargo(totalWeight) // Recommend for heavy items
       });
     }
 
     // GoSend untuk zona 1 dan 2 (Jabodetabek) dengan batas berat 20kg
     if (zone <= 2 && totalWeight <= 20000) {
       for (const [serviceName, rates] of Object.entries(GOSEND_RATES)) {
-        const zoneRates = rates[`zone${zone}` as keyof typeof rates] as any;
         const estimatedDays = rates.estimatedDays[`zone${zone}` as keyof typeof rates.estimatedDays];
         
-        // Estimasi jarak berdasarkan zona
-        const estimatedDistance = zone === 1 ? 8 : 20; // Jakarta: 8km, Jabodetabek: 20km
-        
-        // Pastikan tidak melebihi max km
-        if (estimatedDistance <= zoneRates.maxKm) {
-          const cost = zoneRates.base + (estimatedDistance * zoneRates.perKm);
+        // Check distance limit
+        if (distance <= rates.maxDistance) {
+          const cost = calculateDistanceBasedShipping(rates.baseRate, rates.perKmRate, distance, weightInKg);
           
           shippingOptions.push({
             courier: serviceName,
             service: 'GOSEND',
             cost,
             estimatedDays,
-            description: `${serviceName} - ${estimatedDays} - ${zoneInfo.name} (~${estimatedDistance}km)`,
+            description: `${serviceName} - ${estimatedDays} - ${zoneInfo.name} (${weightInKg}kg, ${distance}km)`,
             type: 'gosend'
           });
         }
@@ -192,7 +238,13 @@ export async function POST(request: NextRequest) {
       weightInKg,
       destination: zoneInfo.name,
       zone,
-      shippingOptions
+      distance,
+      needsCargo: needsCargo(totalWeight),
+      shippingOptions,
+      recommendations: {
+        heavyItem: needsCargo(totalWeight) ? 'Disarankan menggunakan Kurir Toko Kargo untuk barang >20kg' : null,
+        cheapest: shippingOptions.length > 0 ? shippingOptions[0].courier : null
+      }
     });
 
   } catch (error: any) {

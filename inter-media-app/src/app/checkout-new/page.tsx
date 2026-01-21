@@ -32,6 +32,7 @@ interface ShippingOption {
   estimatedDays: string;
   description: string;
   type: string;
+  recommended?: boolean;
 }
 
 export default function CheckoutPage() {
@@ -55,8 +56,8 @@ export default function CheckoutPage() {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('transfer');
-  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<any[]>([]);
+  const [shippingInfo, setShippingInfo] = useState<any>(null);
 
   useEffect(() => {
     // Suppress extension-related errors
@@ -190,9 +191,12 @@ export default function CheckoutPage() {
       if (response.ok) {
         const data = await response.json();
         setShippingOptions(data.shippingOptions || []);
-        // Auto select cheapest option
-        if (data.shippingOptions?.length > 0) {
-          setSelectedShipping(data.shippingOptions[0]);
+        setShippingInfo(data);
+        // Auto select recommended or cheapest option
+        const recommended = data.shippingOptions?.find((opt: ShippingOption) => opt.recommended);
+        const selected = recommended || data.shippingOptions?.[0];
+        if (selected) {
+          setSelectedShipping(selected);
         }
       } else {
         console.error('Shipping calculation failed');
@@ -532,6 +536,22 @@ export default function CheckoutPage() {
                   Pilih Ekspedisi
                 </Label>
                 
+                {/* Weight and Distance Info */}
+                {shippingInfo && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>📦 Total Berat: <strong>{shippingInfo.weightInKg}kg</strong></span>
+                      <span>📍 Jarak: <strong>{shippingInfo.distance}km</strong></span>
+                      <span>🎯 Zona: <strong>{shippingInfo.zone}</strong></span>
+                    </div>
+                    {shippingInfo.recommendations?.heavyItem && (
+                      <div className="mt-2 p-2 bg-orange-100 rounded text-sm text-orange-800">
+                        ⚠️ {shippingInfo.recommendations.heavyItem}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {isCalculatingShipping ? (
                   <div className="text-center py-4">Menghitung ongkir...</div>
                 ) : !selectedCity ? (
@@ -560,7 +580,11 @@ export default function CheckoutPage() {
                               ? 'border-green-300 bg-green-50' 
                               : option.type === 'gosend'
                               ? 'border-orange-300 bg-orange-50'
+                              : option.type === 'kargo'
+                              ? 'border-purple-300 bg-purple-50'
                               : ''
+                          } ${
+                            option.recommended ? 'ring-2 ring-yellow-400' : ''
                           }`}
                         >
                           <div className="flex items-start space-x-3">
@@ -581,9 +605,19 @@ export default function CheckoutPage() {
                                         🚲 Kurir Toko
                                       </span>
                                     )}
+                                    {option.type === 'kargo' && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                        🚛 Kargo
+                                      </span>
+                                    )}
                                     {option.type === 'gosend' && (
                                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                         🏍️ GoSend
+                                      </span>
+                                    )}
+                                    {option.recommended && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        ⭐ Disarankan
                                       </span>
                                     )}
                                   </div>
