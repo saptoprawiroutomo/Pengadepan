@@ -3,21 +3,32 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import ServiceRequest from '@/models/ServiceRequest';
+import { calculateSLATarget, getSLAStatus } from '@/lib/sla-utils';
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily disable auth for testing
-    // const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
     
-    // if (!session || !['admin', 'kasir'].includes(session.user.role)) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     await connectDB();
 
-    const requests = await ServiceRequest.find({})
-      .sort({ createdAt: -1 })
-      .lean();
+    let requests;
+    
+    // Admin/Kasir bisa lihat semua request
+    if (['admin', 'kasir'].includes(session.user.role)) {
+      requests = await ServiceRequest.find({})
+        .populate('userId', 'name email phone')
+        .sort({ createdAt: -1 })
+        .lean();
+    } else {
+      // Customer hanya bisa lihat request mereka sendiri
+      requests = await ServiceRequest.find({ userId: session.user.id })
+        .sort({ createdAt: -1 })
+        .lean();
+    }
 
     return NextResponse.json({ requests });
   } catch (error: any) {
@@ -29,8 +40,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Silakan login terlebih dahulu' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { deviceType, complaint, customerName, phone, address, preferredTime } = body;
+    const { deviceType, complaint, phone, address, priority = 'normal' } = body;
 
     if (!deviceType || !complaint || !phone || !address) {
       return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 });
@@ -40,14 +56,22 @@ export async function POST(request: NextRequest) {
 
     // Generate service code
     const serviceCode = 'SRV-' + Date.now();
+    const createdAt = new Date();
+    
+    // Calculate SLA target
+    const slaTarget = calculateSLATarget(deviceType, priority, createdAt);
+    const slaStatus = getSLAStatus(slaTarget);
 
     const serviceRequest = await ServiceRequest.create({
       serviceCode,
-      userId: session?.user?.id || null, // Optional jika user belum login
+      userId: session.user.id, // Wajib ada userId
       deviceType,
       complaint,
       address,
       phone,
+      priority,
+      slaTarget,
+      slaStatus,
       status: 'received'
     });
 

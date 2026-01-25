@@ -815,6 +815,40 @@ export default function CheckoutPage() {
                       </div>
                     </Label>
                   </div>
+
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                    <RadioGroupItem value="ovo" id="ovo" />
+                    <Label htmlFor="ovo" className="flex-1 cursor-pointer">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">OVO</p>
+                          <p className="text-sm text-muted-foreground">
+                            Transfer ke nomor HP OVO toko
+                          </p>
+                        </div>
+                        <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                          Cepat
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                    <RadioGroupItem value="dana" id="dana" />
+                    <Label htmlFor="dana" className="flex-1 cursor-pointer">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">DANA</p>
+                          <p className="text-sm text-muted-foreground">
+                            Transfer ke nomor HP DANA toko
+                          </p>
+                        </div>
+                        <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          Cepat
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
                   
                   <div className={`flex items-center space-x-2 p-3 border rounded-lg ${
                     selectedShipping?.type !== 'kurir-toko' ? 'opacity-50' : ''
@@ -846,10 +880,25 @@ export default function CheckoutPage() {
                 {paymentMethod === 'transfer' && paymentInfo.length > 0 && (
                   <div className="bg-blue-50 p-3 rounded-lg mt-3">
                     <h4 className="font-medium text-sm mb-2">Rekening Tujuan Transfer:</h4>
-                    {paymentInfo.slice(0, 1).map((info, index) => (
+                    {paymentInfo.filter(info => info.type === 'bank_transfer').slice(0, 1).map((info, index) => (
                       <div key={index} className="text-sm">
                         <p><strong>{info.bankName}</strong> - {info.accountNumber}</p>
                         <p>A.n: {info.accountName}</p>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Detail lengkap akan ditampilkan setelah checkout
+                    </p>
+                  </div>
+                )}
+
+                {(paymentMethod === 'ovo' || paymentMethod === 'dana') && paymentInfo.length > 0 && (
+                  <div className="bg-green-50 p-3 rounded-lg mt-3">
+                    <h4 className="font-medium text-sm mb-2">Transfer {paymentMethod.toUpperCase()} ke:</h4>
+                    {paymentInfo.filter(info => info.type === paymentMethod).slice(0, 1).map((info, index) => (
+                      <div key={index} className="text-sm">
+                        <p><strong>{info.phoneNumber}</strong></p>
+                        <p>A.n: Toko Inter Media</p>
                       </div>
                     ))}
                     <p className="text-xs text-muted-foreground mt-2">
@@ -872,7 +921,7 @@ export default function CheckoutPage() {
               {paymentMethod === 'transfer' && paymentInfo.length > 0 && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Informasi Pembayaran</h4>
-                  {paymentInfo.map((info, index) => (
+                  {paymentInfo.filter(info => info.type === 'bank_transfer').map((info, index) => (
                     <div key={index} className="text-sm mb-2 last:mb-0">
                       <p><strong>{info.bankName}</strong></p>
                       <p>No. Rek: {info.accountNumber}</p>
@@ -881,6 +930,22 @@ export default function CheckoutPage() {
                   ))}
                   <p className="text-xs text-muted-foreground mt-2">
                     Setelah checkout, transfer sesuai total pembayaran dan upload bukti transfer
+                  </p>
+                </div>
+              )}
+
+              {(paymentMethod === 'ovo' || paymentMethod === 'dana') && paymentInfo.length > 0 && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Informasi Pembayaran {paymentMethod.toUpperCase()}</h4>
+                  {paymentInfo.filter(info => info.type === paymentMethod).map((info, index) => (
+                    <div key={index} className="text-sm mb-2 last:mb-0">
+                      <p><strong>Transfer {paymentMethod.toUpperCase()} ke:</strong></p>
+                      <p className="font-mono text-lg">{info.phoneNumber}</p>
+                      <p>A.n: Toko Inter Media</p>
+                    </div>
+                  ))}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Setelah checkout, transfer sesuai total pembayaran ke nomor {paymentMethod.toUpperCase()} di atas
                   </p>
                 </div>
               )}

@@ -7,27 +7,29 @@ export async function POST() {
   try {
     await connectDB();
     
-    // Delete existing admin if exists
-    await User.deleteOne({ email: 'admin@test.com' });
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email: 'admin@intermedia.com' });
+    if (existingAdmin) {
+      return NextResponse.json({ message: 'Admin already exists' });
+    }
+
+    // Create admin user
+    const hashedPassword = await hashPassword('admin123');
     
-    // Create new admin with simple password
-    const hashedPassword = await hashPassword('123456');
-    
-    const admin = await User.create({
-      name: 'Admin Test',
-      email: 'admin@test.com',
-      passwordHash: hashedPassword,
+    const adminUser = new User({
+      name: 'Admin',
+      email: 'admin@intermedia.com',
+      password: hashedPassword,
       role: 'admin',
-      phone: '081234567890',
-      address: 'Test Address',
       isActive: true
     });
-    
+
+    await adminUser.save();
+
     return NextResponse.json({ 
-      message: 'Admin created successfully',
-      email: 'admin@test.com',
-      password: '123456',
-      id: admin._id
+      message: 'Admin user created successfully',
+      email: 'admin@intermedia.com',
+      password: 'admin123'
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

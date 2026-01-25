@@ -1,44 +1,51 @@
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/inter-media-app');
+const MONGODB_URI = "mongodb+srv://saptoprawiroutomo_db_user:1234qwer@cluster0.z3wyzso.mongodb.net/intermediadb?retryWrites=true&w=majority&appName=Cluster0";
 
 async function testDatabase() {
-  try {
-    console.log('🔍 Testing database connection...');
+    console.log('🔍 Testing Database Connection and Data...\n');
     
-    // Wait for connection
-    await new Promise((resolve) => {
-      mongoose.connection.once('open', resolve);
-    });
-    
-    // Test collections
-    const collections = await mongoose.connection.db.listCollections().toArray();
-    console.log('📊 Collections found:', collections.map(c => c.name));
-    
-    // Count documents
-    const users = await mongoose.connection.db.collection('users').countDocuments();
-    const categories = await mongoose.connection.db.collection('categories').countDocuments();
-    const products = await mongoose.connection.db.collection('products').countDocuments();
-    const paymentinfos = await mongoose.connection.db.collection('paymentinfos').countDocuments();
-    
-    console.log('📈 Document counts:');
-    console.log(`  Users: ${users}`);
-    console.log(`  Categories: ${categories}`);
-    console.log(`  Products: ${products}`);
-    console.log(`  Payment Info: ${paymentinfos}`);
-    
-    // Test admin user
-    const adminUser = await mongoose.connection.db.collection('users').findOne({ email: 'admin@test.com' });
-    console.log('👤 Admin user exists:', !!adminUser);
-    console.log('🔑 Admin role:', adminUser?.role);
-    
-    console.log('✅ Database test completed successfully!');
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Database test failed:', error);
-    process.exit(1);
-  }
+    try {
+        const client = new MongoClient(MONGODB_URI);
+        await client.connect();
+        console.log('✅ Database connected successfully');
+        
+        const db = client.db('intermediadb');
+        
+        // Test collections
+        const collections = await db.listCollections().toArray();
+        console.log(`📁 Found ${collections.length} collections:`);
+        collections.forEach(col => console.log(`   - ${col.name}`));
+        
+        // Test products
+        const products = await db.collection('products').find({}).limit(5).toArray();
+        console.log(`\n📦 Products in database: ${products.length > 0 ? products.length + ' found' : 'No products found'}`);
+        if (products.length > 0) {
+            console.log(`   Sample: ${products[0].name} - Rp ${products[0].price?.toLocaleString()}`);
+        }
+        
+        // Test categories
+        const categories = await db.collection('categories').find({}).toArray();
+        console.log(`🏷️  Categories: ${categories.length} found`);
+        
+        // Test users
+        const users = await db.collection('users').countDocuments();
+        console.log(`👥 Users: ${users} registered`);
+        
+        // Test orders
+        const orders = await db.collection('orders').countDocuments();
+        console.log(`📋 Orders: ${orders} total`);
+        
+        // Test messages
+        const messages = await db.collection('messages').countDocuments();
+        console.log(`💬 Messages: ${messages} total`);
+        
+        await client.close();
+        console.log('\n✅ Database test completed successfully');
+        
+    } catch (error) {
+        console.error('❌ Database test failed:', error.message);
+    }
 }
 
 testDatabase();

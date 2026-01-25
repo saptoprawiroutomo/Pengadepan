@@ -2,14 +2,16 @@
 
 import { useSession } from 'next-auth/react';
 import FloatingChat from './FloatingChat';
-import AdminFloatingChat from './AdminFloatingChat';
+import EnhancedAdminChat from './EnhancedAdminChat';
 
 export default function ChatWidget() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
-  if (session?.user?.role === 'admin') {
-    return <AdminFloatingChat />;
+  // Only show admin chat if user is logged in AND is admin
+  if (status === 'authenticated' && session?.user?.role === 'admin') {
+    return <EnhancedAdminChat />;
   }
 
+  // Show customer chat for everyone else (including guests)
   return <FloatingChat />;
 }

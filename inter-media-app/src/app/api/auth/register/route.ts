@@ -7,12 +7,26 @@ import { registerSchema } from '@/lib/validations';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validatedData = registerSchema.parse(body);
+    
+    // Basic validation
+    if (!body.name || !body.email || !body.password) {
+      return NextResponse.json(
+        { error: 'Nama, email, dan password wajib diisi' },
+        { status: 400 }
+      );
+    }
+
+    if (body.password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password minimal 6 karakter' },
+        { status: 400 }
+      );
+    }
 
     await connectDB();
 
     // Check if user exists
-    const existingUser = await User.findOne({ email: validatedData.email });
+    const existingUser = await User.findOne({ email: body.email });
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email sudah terdaftar' },
@@ -21,15 +35,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const passwordHash = await hashPassword(validatedData.password);
+    const passwordHash = await hashPassword(body.password);
 
     // Create user
     const user = await User.create({
-      name: validatedData.name,
-      email: validatedData.email,
+      name: body.name,
+      email: body.email,
       passwordHash,
-      phone: validatedData.phone,
-      address: validatedData.address,
+      phone: body.phone || '',
+      address: body.address || '',
       role: 'customer',
     });
 
@@ -43,9 +57,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error('Registration error:', error);
     return NextResponse.json(
-      { error: error.message || 'Registrasi gagal' },
-      { status: 400 }
+      { error: 'Terjadi kesalahan server' },
+      { status: 500 }
     );
   }
 }

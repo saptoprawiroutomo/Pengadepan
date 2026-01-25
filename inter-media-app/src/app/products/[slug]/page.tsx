@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Product {
   _id: string;
@@ -53,7 +54,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!session) {
-      alert('Silakan login terlebih dahulu');
+      toast.info('Silakan login terlebih dahulu');
       return;
     }
 
@@ -78,10 +79,10 @@ export default function ProductDetailPage() {
           setShowSuccess(false);
         }, 3000);
       } else {
-        alert('Gagal menambahkan ke keranjang');
+        toast.error('Gagal menambahkan ke keranjang');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     } finally {
       setIsAddingToCart(false);
     }

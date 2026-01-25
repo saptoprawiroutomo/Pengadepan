@@ -14,6 +14,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema } from '@/lib/validations';
 import { z } from 'zod';
+import { toast } from 'sonner';
 
 type ProductForm = z.infer<typeof productSchema>;
 
@@ -120,11 +121,11 @@ export default function ProductsPage() {
       } else {
         const errorData = await response.json();
         console.error('Error response:', errorData);
-        alert(`Error: ${errorData.error || 'Gagal menyimpan produk'}`);
+        toast.error(`Error: ${errorData.error || 'Gagal menyimpan produk'}`);
       }
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Terjadi kesalahan saat menyimpan produk');
+      toast.error('Terjadi kesalahan saat menyimpan produk');
     }
   };
 
@@ -148,19 +149,32 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Yakin ingin menghapus produk ini?')) {
-      try {
-        const response = await fetch(`/api/admin/products/${id}`, {
-          method: 'DELETE',
-        });
-        
-        if (response.ok) {
-          fetchProducts();
+    toast('Yakin ingin menghapus produk ini?', {
+      action: {
+        label: 'Ya',
+        onClick: async () => {
+          try {
+            const response = await fetch(`/api/admin/products/${id}`, {
+              method: 'DELETE',
+            });
+            
+            if (response.ok) {
+              fetchProducts();
+              toast.success('Produk berhasil dihapus');
+            } else {
+              toast.error('Gagal menghapus produk');
+            }
+          } catch (error) {
+            console.error('Error deleting product:', error);
+            toast.error('Terjadi kesalahan');
+          }
         }
-      } catch (error) {
-        console.error('Error deleting product:', error);
+      },
+      cancel: {
+        label: 'Batal',
+        onClick: () => {}
       }
-    }
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,7 +182,7 @@ export default function ProductsPage() {
     
     // Batasi maksimal 5 gambar
     if (files.length > 5) {
-      alert('Maksimal 5 gambar per produk');
+      toast('Maksimal 5 gambar per produk');
       return;
     }
     

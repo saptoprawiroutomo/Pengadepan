@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface Order {
   _id: string;
@@ -81,15 +82,15 @@ export default function AdminOrdersPage() {
         const result = await response.json();
         console.log('Update result:', result);
         fetchOrders();
-        alert(`Status berhasil diubah ke ${status}`);
+        toast.success(`Status berhasil diubah ke ${status}`);
       } else {
         const errorData = await response.json();
         console.error('Update error:', errorData);
-        alert(`Gagal mengubah status: ${errorData.error}`);
+        toast.error(`Gagal mengubah status: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Terjadi kesalahan saat mengubah status');
+      toast.error('Terjadi kesalahan saat mengubah status');
     }
   };
 
@@ -124,14 +125,14 @@ export default function AdminOrdersPage() {
         setIsTrackingDialogOpen(false);
         setTrackingData({ trackingNumber: '', courier: 'JNE' });
         setShippingOrder(null);
-        alert('Resi berhasil diinput, status berubah ke "Dalam Pengiriman"');
+        toast.success('Resi berhasil diinput, status berubah ke "Dalam Pengiriman"');
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        toast.error(`Error: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error adding tracking:', error);
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 

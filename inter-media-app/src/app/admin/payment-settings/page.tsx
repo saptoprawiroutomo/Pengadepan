@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
 interface PaymentInfo {
@@ -18,6 +19,7 @@ interface PaymentInfo {
   bankName: string;
   accountNumber: string;
   accountName: string;
+  phoneNumber: string;
   instructions: string;
   isActive: boolean;
 }
@@ -30,9 +32,11 @@ export default function PaymentSettingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentInfo | null>(null);
   const [formData, setFormData] = useState({
+    type: 'bank_transfer',
     bankName: '',
     accountNumber: '',
     accountName: '',
+    phoneNumber: '',
     instructions: ''
   });
 
@@ -74,10 +78,7 @@ export default function PaymentSettingsPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          type: 'bank_transfer'
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -96,10 +97,12 @@ export default function PaymentSettingsPage() {
   const handleEdit = (payment: PaymentInfo) => {
     setEditingPayment(payment);
     setFormData({
-      bankName: payment.bankName,
-      accountNumber: payment.accountNumber,
-      accountName: payment.accountName,
-      instructions: payment.instructions
+      type: payment.type,
+      bankName: payment.bankName || '',
+      accountNumber: payment.accountNumber || '',
+      accountName: payment.accountName || '',
+      phoneNumber: payment.phoneNumber || '',
+      instructions: payment.instructions || ''
     });
     setIsDialogOpen(true);
   };
@@ -124,9 +127,11 @@ export default function PaymentSettingsPage() {
     setIsDialogOpen(false);
     setEditingPayment(null);
     setFormData({
+      type: 'bank_transfer',
       bankName: '',
       accountNumber: '',
       accountName: '',
+      phoneNumber: '',
       instructions: ''
     });
   };
@@ -151,59 +156,92 @@ export default function PaymentSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Rekening Bank Transfer</CardTitle>
-              <p className="text-sm text-muted-foreground">Kelola rekening untuk pembayaran transfer bank</p>
+              <CardTitle>Metode Pembayaran</CardTitle>
+              <p className="text-sm text-muted-foreground">Kelola rekening bank dan e-wallet untuk pembayaran</p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="rounded-2xl">
                   <Plus className="mr-2 h-4 w-4" />
-                  Tambah Rekening
+                  Tambah Metode
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingPayment ? 'Edit Rekening' : 'Tambah Rekening'}
+                    {editingPayment ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran'}
                   </DialogTitle>
                   <DialogDescription>
-                    {editingPayment ? 'Ubah informasi rekening bank' : 'Tambahkan rekening bank baru'}
+                    {editingPayment ? 'Ubah informasi metode pembayaran' : 'Tambahkan metode pembayaran baru'}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="bankName">Nama Bank</Label>
-                    <Input
-                      id="bankName"
-                      value={formData.bankName}
-                      onChange={(e) => setFormData({...formData, bankName: e.target.value})}
-                      className="rounded-2xl"
-                      placeholder="Contoh: Bank BCA"
-                      required
-                    />
+                    <Label htmlFor="type">Jenis Pembayaran</Label>
+                    <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
+                      <SelectTrigger className="rounded-2xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bank_transfer">Transfer Bank</SelectItem>
+                        <SelectItem value="ovo">OVO</SelectItem>
+                        <SelectItem value="dana">DANA</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                    <Input
-                      id="accountNumber"
-                      value={formData.accountNumber}
-                      onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
-                      className="rounded-2xl"
-                      placeholder="1234567890"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="accountName">Atas Nama</Label>
-                    <Input
-                      id="accountName"
-                      value={formData.accountName}
-                      onChange={(e) => setFormData({...formData, accountName: e.target.value})}
-                      className="rounded-2xl"
-                      placeholder="Nama Pemilik Rekening"
-                      required
-                    />
-                  </div>
+
+                  {formData.type === 'bank_transfer' && (
+                    <>
+                      <div>
+                        <Label htmlFor="bankName">Nama Bank</Label>
+                        <Input
+                          id="bankName"
+                          value={formData.bankName}
+                          onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                          className="rounded-2xl"
+                          placeholder="Contoh: Bank BCA"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="accountNumber">Nomor Rekening</Label>
+                        <Input
+                          id="accountNumber"
+                          value={formData.accountNumber}
+                          onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                          className="rounded-2xl"
+                          placeholder="1234567890"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="accountName">Atas Nama</Label>
+                        <Input
+                          id="accountName"
+                          value={formData.accountName}
+                          onChange={(e) => setFormData({...formData, accountName: e.target.value})}
+                          className="rounded-2xl"
+                          placeholder="Nama Pemilik Rekening"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {(formData.type === 'ovo' || formData.type === 'dana') && (
+                    <div>
+                      <Label htmlFor="phoneNumber">Nomor HP {formData.type.toUpperCase()}</Label>
+                      <Input
+                        id="phoneNumber"
+                        value={formData.phoneNumber}
+                        onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                        className="rounded-2xl"
+                        placeholder="081234567890"
+                        required
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <Label htmlFor="instructions">Instruksi Pembayaran</Label>
                     <Textarea
@@ -211,7 +249,7 @@ export default function PaymentSettingsPage() {
                       value={formData.instructions}
                       onChange={(e) => setFormData({...formData, instructions: e.target.value})}
                       className="rounded-2xl"
-                      placeholder="Instruksi untuk customer setelah transfer"
+                      placeholder="Instruksi untuk customer"
                       rows={3}
                     />
                   </div>
@@ -231,9 +269,9 @@ export default function PaymentSettingsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Bank</TableHead>
-                  <TableHead>No. Rekening</TableHead>
-                  <TableHead>Atas Nama</TableHead>
+                  <TableHead>Jenis</TableHead>
+                  <TableHead>Info</TableHead>
+                  <TableHead>Atas Nama / No HP</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Aksi</TableHead>
                 </TableRow>
@@ -241,9 +279,20 @@ export default function PaymentSettingsPage() {
               <TableBody>
                 {paymentMethods.map((payment) => (
                   <TableRow key={payment._id}>
-                    <TableCell className="font-medium">{payment.bankName}</TableCell>
-                    <TableCell className="font-mono">{payment.accountNumber}</TableCell>
-                    <TableCell>{payment.accountName}</TableCell>
+                    <TableCell className="font-medium">
+                      {payment.type === 'bank_transfer' ? 'Bank Transfer' : 
+                       payment.type === 'ovo' ? 'OVO' : 
+                       payment.type === 'dana' ? 'DANA' : payment.type}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {payment.type === 'bank_transfer' ? 
+                        `${payment.bankName} - ${payment.accountNumber}` :
+                        payment.phoneNumber
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {payment.type === 'bank_transfer' ? payment.accountName : payment.phoneNumber}
+                    </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         payment.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Product {
   _id: string;
@@ -103,7 +104,7 @@ function ProductsContent() {
 
   const handleAddToCart = async (productId: string) => {
     if (!session) {
-      alert('Silakan login terlebih dahulu');
+      toast.info('Silakan login terlebih dahulu');
       return;
     }
 
@@ -127,15 +128,26 @@ function ProductsContent() {
           setAddedToCart(null);
         }, 2000);
       } else {
-        alert('Gagal menambahkan ke keranjang');
+        toast.error('Gagal menambahkan ke keranjang');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-64 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -181,7 +193,7 @@ function ProductsContent() {
           <Card key={product._id} className="rounded-2xl hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="bg-muted rounded-2xl h-48 mb-4 flex items-center justify-center">
-                {product.images.length > 0 ? (
+                {product.images && product.images.length > 0 ? (
                   <img 
                     src={product.images[0]} 
                     alt={product.name}

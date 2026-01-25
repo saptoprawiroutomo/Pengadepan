@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import Chat from '@/models/Chat';
 import User from '@/models/User';
+import mongoose from 'mongoose';
 
 export async function GET() {
   try {
@@ -35,24 +36,42 @@ export async function GET() {
       { $sort: { lastMessageTime: -1 } }
     ]);
 
-    // Get user details
-    const userIds = chatUsers.map(chat => chat._id);
-    const users = await User.find({ _id: { $in: userIds } }).select('name email');
+    // Get user details for each chat
+    const chatRooms = await Promise.all(
+      chatUsers.map(async (chat) => {
+        const isGuest = chat._id.startsWith('guest');
+        
+        if (isGuest) {
+          return {
+            userId: chat._id,
+            userName: 'Guest User',
+            userEmail: 'guest@example.com',
+            lastMessage: chat.lastMessage,
+            lastActivity: chat.lastMessageTime,
+            unreadCount: chat.unreadCount
+          };
+        }
 
-    const chatRooms = chatUsers.map(chat => {
-      const user = users.find(u => u._id.toString() === chat._id);
-      return {
-        userId: chat._id,
-        userName: user?.name || user?.email || 'Unknown User',
-        lastMessage: chat.lastMessage,
-        lastMessageTime: chat.lastMessageTime,
-        unreadCount: chat.unreadCount,
-        isOnline: false // TODO: Implement real-time online status
-      };
-    });
+        // Try to get user details from User model
+        let user = null;
+        if (mongoose.Types.ObjectId.isValid(chat._id)) {
+          user = await User.findById(chat._id).select('name email');
+        }
+        
+        return {
+          userId: chat._id,
+          userName: user?.name || 'Unknown User',
+          userEmail: user?.email || 'No email',
+          lastMessage: chat.lastMessage,
+          lastActivity: chat.lastMessageTime,
+          unreadCount: chat.unreadCount
+        };
+      })
+    );
 
     return NextResponse.json(chatRooms);
   } catch (error: any) {
+    console.error('Admin chat rooms error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

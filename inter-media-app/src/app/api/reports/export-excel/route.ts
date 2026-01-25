@@ -4,12 +4,6 @@ import * as XLSX from 'xlsx';
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily disable auth for testing
-    // const session = await getServerSession(authOptions);
-    // if (!session || session.user.role !== 'admin') {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
@@ -25,39 +19,90 @@ export async function GET(request: NextRequest) {
       dateFilter.$lte = end;
     }
 
-    // Get sales transactions
     const mongoose = require('mongoose');
-    const salesTransactions = await mongoose.connection.db.collection('salestransactions')
-      .find(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
-      .sort({ createdAt: -1 })
-      .toArray();
+    const db = mongoose.connection.db;
 
-    // Prepare Excel data
-    const excelData = salesTransactions.map((transaction: any) => ({
-      'Kode Transaksi': transaction.transactionCode || `TXN-${transaction._id?.toString().slice(-6)}`,
+    // Get POS transactions
+    const posFilter = Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {};
+    const posTransactions = await db.collection('salestransactions').find(posFilter).sort({ createdAt: -1 }).toArray();
+
+    // Get Online orders
+    const onlineOrders = await db.collection('orders').find(posFilter).sort({ createdAt: -1 }).toArray();
+
+    // Prepare POS data
+    const posData = posTransactions.map((transaction: any) => ({
+      'Tipe': 'POS',
+      'Kode': transaction.transactionCode || `POS-${transaction._id?.toString().slice(-6)}`,
       'Tanggal': new Date(transaction.createdAt).toLocaleDateString('id-ID'),
-      'Pembeli': transaction.customerName || 'Walk-in Customer',
+      'Customer': transaction.customerName || 'Walk-in Customer',
+      'Kasir': transaction.cashierName || 'Kasir',
       'Items': (transaction.items || []).map((item: any) => 
-        `${item.nameSnapshot || 'Product'} (${item.qty || item.quantity || 0}x)`
+        `${item.nameSnapshot || 'Product'} (${item.qty || 0}x)`
       ).join(', '),
-      'Total': transaction.total || transaction.totalAmount || 0
+      'Payment': transaction.paymentMethod || 'cash',
+      'Total': transaction.total || 0
     }));
+
+    // Prepare Online data
+    const onlineData = onlineOrders.map((order: any) => ({
+      'Tipe': 'Online',
+      'Kode': order.orderNumber || `ORD-${order._id?.toString().slice(-6)}`,
+      'Tanggal': new Date(order.createdAt).toLocaleDateString('id-ID'),
+      'Customer': order.customerInfo?.name || 'Customer',
+      'Kasir': '-',
+      'Items': (order.items || []).map((item: any) => 
+        `${item.nameSnapshot || 'Product'} (${item.quantity || 0}x)`
+      ).join(', '),
+      'Payment': order.paymentMethod || 'transfer',
+      'Total': order.total || 0
+    }));
+
+    // Calculate summary
+    const posTotal = posTransactions.reduce((sum, txn) => sum + (txn.total || 0), 0);
+    const onlineTotal = onlineOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+    const summaryData = [
+      { 'Kategori': 'Transaksi POS', 'Jumlah': posTransactions.length, 'Total': posTotal },
+      { 'Kategori': 'Transaksi Online', 'Jumlah': onlineOrders.length, 'Total': onlineTotal },
+      { 'Kategori': 'TOTAL', 'Jumlah': posTransactions.length + onlineOrders.length, 'Total': posTotal + onlineTotal }
+    ];
 
     // Create workbook
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    
-    // Auto-width columns
-    const colWidths = [
-      { wch: 20 }, // Kode Transaksi
+
+    // Summary sheet
+    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+    summaryWs['!cols'] = [{ wch: 20 }, { wch: 10 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Ringkasan');
+
+    // Combined transactions sheet
+    const allData = [...posData, ...onlineData].sort((a, b) => b.Tanggal.localeCompare(a.Tanggal));
+    const allWs = XLSX.utils.json_to_sheet(allData);
+    allWs['!cols'] = [
+      { wch: 8 },  // Tipe
+      { wch: 15 }, // Kode
       { wch: 12 }, // Tanggal
-      { wch: 20 }, // Pembeli
+      { wch: 20 }, // Customer
+      { wch: 15 }, // Kasir
       { wch: 40 }, // Items
+      { wch: 10 }, // Payment
       { wch: 15 }  // Total
     ];
-    ws['!cols'] = colWidths;
+    XLSX.utils.book_append_sheet(wb, allWs, 'Semua Transaksi');
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Penjualan');
+    // POS only sheet
+    if (posData.length > 0) {
+      const posWs = XLSX.utils.json_to_sheet(posData);
+      posWs['!cols'] = allWs['!cols'];
+      XLSX.utils.book_append_sheet(wb, posWs, 'Transaksi POS');
+    }
+
+    // Online only sheet
+    if (onlineData.length > 0) {
+      const onlineWs = XLSX.utils.json_to_sheet(onlineData);
+      onlineWs['!cols'] = allWs['!cols'];
+      XLSX.utils.book_append_sheet(wb, onlineWs, 'Transaksi Online');
+    }
 
     // Generate Excel file
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });

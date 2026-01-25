@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 
 const userFormSchema = z.object({
   name: z.string().min(2, 'Nama minimal 2 karakter'),
@@ -96,11 +97,11 @@ export default function UsersPage() {
         setEditingUser(null);
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Unknown error'}`);
+        toast.error(`Error: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving user:', error);
-      alert('Error saving user');
+      toast.error('Error saving user');
     }
   };
 
@@ -137,11 +138,11 @@ export default function UsersPage() {
         fetchUsers();
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Failed to delete user'}`);
+        toast.error(`Error: ${errorData.error || 'Failed to delete user'}`);
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user');
+      toast.error('Error deleting user');
     }
   };
 

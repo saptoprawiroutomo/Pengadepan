@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar, TrendingUp, Package, Wrench, FileSpreadsheet, Printer } from 'lucide-react';
+import { FileText, Calendar, TrendingUp, Package, Wrench, FileSpreadsheet, Printer, Truck, ShoppingCart, CreditCard } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ReportsPage() {
   const { data: session } = useSession();
@@ -24,6 +25,9 @@ export default function ReportsPage() {
   const [servicesData, setServicesData] = useState<any>(null);
   const [stockData, setStockData] = useState<any>(null);
   const [topProductsData, setTopProductsData] = useState<any>(null);
+  const [shippingData, setShippingData] = useState<any>(null);
+  const [ordersData, setOrdersData] = useState<any>(null);
+  const [paymentsData, setPaymentsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -55,11 +59,14 @@ export default function ReportsPage() {
       console.log('Frontend sending params:', { startDate, endDate });
       console.log('API URL:', `/api/reports/sales?${params}`);
 
-      const [salesRes, servicesRes, stockRes, topProductsRes] = await Promise.all([
+      const [salesRes, servicesRes, stockRes, topProductsRes, shippingRes, ordersRes, paymentsRes] = await Promise.all([
         fetch(`/api/reports/sales?${params}&_t=${Date.now()}`), // Add cache buster
         fetch(`/api/reports/services?${params}`),
         fetch('/api/reports/stock'),
-        fetch('/api/reports/top-products')
+        fetch('/api/reports/top-products'),
+        fetch(`/api/reports/shipping?${params}`),
+        fetch(`/api/reports/orders?${params}`),
+        fetch(`/api/reports/payments?${params}`)
       ]);
 
       if (salesRes.ok) {
@@ -73,6 +80,9 @@ export default function ReportsPage() {
       if (servicesRes.ok) setServicesData(await servicesRes.json());
       if (stockRes.ok) setStockData(await stockRes.json());
       if (topProductsRes.ok) setTopProductsData(await topProductsRes.json());
+      if (shippingRes.ok) setShippingData(await shippingRes.json());
+      if (ordersRes.ok) setOrdersData(await ordersRes.json());
+      if (paymentsRes.ok) setPaymentsData(await paymentsRes.json());
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -82,6 +92,8 @@ export default function ReportsPage() {
 
   const exportToExcel = async () => {
     try {
+      toast.loading('Mengexport data...', { id: 'export-excel' });
+      
       const params = new URLSearchParams();
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
@@ -97,16 +109,20 @@ export default function ReportsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-excel' });
       } else {
-        alert('Gagal export Excel');
+        toast.error('Gagal export Excel', { id: 'export-excel' });
       }
     } catch (error) {
-      alert('Gagal export Excel');
+      toast.error('Gagal export Excel', { id: 'export-excel' });
     }
   };
 
   const exportStockToExcel = async () => {
     try {
+      toast.loading('Mengexport data stok...', { id: 'export-stock' });
+      
       const response = await fetch('/api/reports/export-stock');
       if (response.ok) {
         const blob = await response.blob();
@@ -118,14 +134,20 @@ export default function ReportsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-stock' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-stock' });
       }
     } catch (error) {
-      alert('Gagal export Excel');
+      toast.error('Gagal export Excel', { id: 'export-stock' });
     }
   };
 
   const exportServicesToExcel = async () => {
     try {
+      toast.loading('Mengexport data servis...', { id: 'export-services' });
+      
       const params = new URLSearchParams();
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
@@ -141,14 +163,20 @@ export default function ReportsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-services' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-services' });
       }
     } catch (error) {
-      alert('Gagal export Excel');
+      toast.error('Gagal export Excel', { id: 'export-services' });
     }
   };
 
   const exportTopProductsToExcel = async () => {
     try {
+      toast.loading('Mengexport data produk terlaris...', { id: 'export-top-products' });
+      
       const params = new URLSearchParams();
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
@@ -164,9 +192,100 @@ export default function ReportsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-top-products' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-top-products' });
       }
     } catch (error) {
-      alert('Gagal export Excel');
+      toast.error('Gagal export Excel', { id: 'export-top-products' });
+    }
+  };
+
+  const exportShippingToExcel = async () => {
+    try {
+      toast.loading('Mengexport data pengiriman...', { id: 'export-shipping' });
+      
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/reports/export-shipping?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-pengiriman-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-shipping' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-shipping' });
+      }
+    } catch (error) {
+      toast.error('Gagal export Excel', { id: 'export-shipping' });
+    }
+  };
+
+  const exportOrdersToExcel = async () => {
+    try {
+      toast.loading('Mengexport data pemesanan...', { id: 'export-orders' });
+      
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/reports/export-orders?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-pemesanan-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-orders' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-orders' });
+      }
+    } catch (error) {
+      toast.error('Gagal export Excel', { id: 'export-orders' });
+    }
+  };
+
+  const exportPaymentsToExcel = async () => {
+    try {
+      toast.loading('Mengexport data pembayaran...', { id: 'export-payments' });
+      
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/reports/export-payments?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan-pembayaran-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('File Excel berhasil didownload', { id: 'export-payments' });
+      } else {
+        toast.error('Gagal export Excel', { id: 'export-payments' });
+      }
+    } catch (error) {
+      toast.error('Gagal export Excel', { id: 'export-payments' });
     }
   };
 
@@ -209,11 +328,14 @@ export default function ReportsPage() {
       </div>
 
       <Tabs defaultValue="sales" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="sales">Penjualan</TabsTrigger>
           <TabsTrigger value="services">Servis</TabsTrigger>
           <TabsTrigger value="stock">Stok</TabsTrigger>
           <TabsTrigger value="top-products">Produk Terlaris</TabsTrigger>
+          <TabsTrigger value="shipping">Pengiriman</TabsTrigger>
+          <TabsTrigger value="orders">Pemesanan</TabsTrigger>
+          <TabsTrigger value="payments">Pembayaran</TabsTrigger>
         </TabsList>
 
         {/* Sales Report */}
@@ -244,6 +366,7 @@ export default function ReportsPage() {
 
             {salesData && (
               <>
+                {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="rounded-2xl">
                     <CardContent className="p-6">
@@ -274,8 +397,8 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-blue-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.totalRevenue || 0).toLocaleString('id-ID')}</p>
-                          <p className="text-sm text-muted-foreground">Total Penjualan</p>
+                          <p className="text-2xl font-bold">{salesData?.summary?.posTransactions || 0}</p>
+                          <p className="text-sm text-muted-foreground">Transaksi POS</p>
                         </div>
                       </div>
                     </CardContent>
@@ -286,14 +409,62 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2">
                         <Package className="h-8 w-8 text-purple-600" />
                         <div>
-                          <p className="text-2xl font-bold">Rp {(salesData?.summary?.averageOrderValue || 0).toLocaleString('id-ID')}</p>
-                          <p className="text-sm text-muted-foreground">Rata-rata Order</p>
+                          <p className="text-2xl font-bold">{salesData?.summary?.onlineTransactions || 0}</p>
+                          <p className="text-sm text-muted-foreground">Transaksi Online</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
+                {/* POS vs Online Comparison */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Transaksi POS</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>Total Transaksi:</span>
+                          <span className="font-semibold">{salesData?.summary?.posTransactions || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Pendapatan:</span>
+                          <span className="font-semibold">Rp {(salesData?.summary?.posRevenue || 0).toLocaleString('id-ID')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Rata-rata Order:</span>
+                          <span className="font-semibold">Rp {(salesData?.summary?.posAverage || 0).toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Transaksi Online</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>Total Transaksi:</span>
+                          <span className="font-semibold">{salesData?.summary?.onlineTransactions || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Pendapatan:</span>
+                          <span className="font-semibold">Rp {(salesData?.summary?.onlineRevenue || 0).toLocaleString('id-ID')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Rata-rata Order:</span>
+                          <span className="font-semibold">Rp {(salesData?.summary?.onlineAverage || 0).toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Daily Sales Chart */}
                 <Card className="rounded-2xl">
                   <CardHeader>
                     <CardTitle>Penjualan Harian</CardTitle>
@@ -303,16 +474,18 @@ export default function ReportsPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Tanggal</TableHead>
-                          <TableHead>Jumlah Transaksi</TableHead>
-                          <TableHead>Total Penjualan</TableHead>
+                          <TableHead>POS</TableHead>
+                          <TableHead>Online</TableHead>
+                          <TableHead>Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {(salesData?.dailySales || []).map((day: any, index: number) => (
                           <TableRow key={index}>
                             <TableCell>{day.date || 'N/A'}</TableCell>
-                            <TableCell>{day.orderCount || 0}</TableCell>
-                            <TableCell>Rp {(day.totalSales || 0).toLocaleString('id-ID')}</TableCell>
+                            <TableCell>Rp {(day.posSales || 0).toLocaleString('id-ID')}</TableCell>
+                            <TableCell>Rp {(day.onlineSales || 0).toLocaleString('id-ID')}</TableCell>
+                            <TableCell className="font-semibold">Rp {(day.totalSales || 0).toLocaleString('id-ID')}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -320,50 +493,115 @@ export default function ReportsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Detail Transaksi */}
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle>Detail Transaksi POS</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Kode Transaksi</TableHead>
-                          <TableHead>Tanggal</TableHead>
-                          <TableHead>Pembeli</TableHead>
-                          <TableHead>Items</TableHead>
-                          <TableHead>Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(salesData?.transactions || []).map((transaction: any, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-mono">
-                              {transaction.transactionCode || `TXN-${transaction._id?.toString().slice(-6)}`}
-                            </TableCell>
-                            <TableCell>
-                              {new Date(transaction.createdAt).toLocaleDateString('id-ID')}
-                            </TableCell>
-                            <TableCell>{transaction.customerName || 'Walk-in Customer'}</TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                {(transaction.items || []).map((item: any, i: number) => (
-                                  <div key={i} className="mb-1">
-                                    {item.nameSnapshot || 'Product'} ({item.qty || item.quantity || 0}x)
+                {/* Separate POS and Online Transactions */}
+                <Tabs defaultValue="pos-transactions" className="space-y-4">
+                  <TabsList>
+                    <TabsTrigger value="pos-transactions">Transaksi POS</TabsTrigger>
+                    <TabsTrigger value="online-transactions">Transaksi Online</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="pos-transactions">
+                    <Card className="rounded-2xl">
+                      <CardHeader>
+                        <CardTitle>Detail Transaksi POS</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Kode Transaksi</TableHead>
+                              <TableHead>Tanggal</TableHead>
+                              <TableHead>Kasir</TableHead>
+                              <TableHead>Items</TableHead>
+                              <TableHead>Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(salesData?.posTransactions || []).map((transaction: any, index: number) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono">
+                                  {transaction.transactionCode || `POS-${transaction._id?.toString().slice(-6)}`}
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(transaction.createdAt).toLocaleDateString('id-ID')}
+                                </TableCell>
+                                <TableCell>{transaction.cashierName || 'Kasir'}</TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {(transaction.items || []).map((item: any, i: number) => (
+                                      <div key={i} className="mb-1">
+                                        {item.nameSnapshot || 'Product'} ({item.qty || item.quantity || 0}x)
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-semibold">
-                              Rp {(transaction.total || transaction.totalAmount || 0).toLocaleString('id-ID')}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                                </TableCell>
+                                <TableCell className="font-semibold">
+                                  Rp {(transaction.total || transaction.totalAmount || 0).toLocaleString('id-ID')}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="online-transactions">
+                    <Card className="rounded-2xl">
+                      <CardHeader>
+                        <CardTitle>Detail Transaksi Online</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Order ID</TableHead>
+                              <TableHead>Tanggal</TableHead>
+                              <TableHead>Customer</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Items</TableHead>
+                              <TableHead>Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(salesData?.onlineTransactions || []).map((order: any, index: number) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono">
+                                  {order.orderNumber || `ORD-${order._id?.toString().slice(-6)}`}
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(order.createdAt).toLocaleDateString('id-ID')}
+                                </TableCell>
+                                <TableCell>{order.customerName || order.userId?.name || 'Customer'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={
+                                    order.status === 'delivered' ? 'default' :
+                                    order.status === 'shipped' ? 'secondary' :
+                                    order.status === 'processing' ? 'outline' : 'destructive'
+                                  }>
+                                    {order.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {(order.items || []).map((item: any, i: number) => (
+                                      <div key={i} className="mb-1">
+                                        {item.nameSnapshot || item.name || 'Product'} ({item.quantity || 0}x)
+                                      </div>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="font-semibold">
+                                  Rp {(order.totalAmount || 0).toLocaleString('id-ID')}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </>
             )}
           </div>
@@ -673,7 +911,7 @@ export default function ReportsPage() {
                       </TableHeader>
                       <TableBody>
                         {topProductsData.topProducts.map((product: any, index: number) => (
-                          <TableRow key={product._id}>
+                          <TableRow key={`product-${index}`}>
                             <TableCell>
                               <Badge variant={index < 3 ? "default" : "secondary"}>
                                 #{index + 1}
@@ -683,6 +921,450 @@ export default function ReportsPage() {
                             <TableCell>{product.categoryName}</TableCell>
                             <TableCell>{product.soldCount}</TableCell>
                             <TableCell>Rp {product.revenue.toLocaleString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Shipping Report */}
+        <TabsContent value="shipping">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Laporan Pengiriman</h2>
+              <div className="flex gap-2">
+                <Button onClick={exportShippingToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-shipping?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
+            </div>
+
+            {shippingData && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <Truck className="h-8 w-8 text-primary" />
+                        <div>
+                          <p className="text-2xl font-bold">{shippingData.summary?.totalShipments || 0}</p>
+                          <p className="text-sm text-muted-foreground">Total Pengiriman</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <Truck className="h-8 w-8 text-green-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{shippingData.summary?.delivered || 0}</p>
+                          <p className="text-sm text-muted-foreground">Terkirim</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <Truck className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{shippingData.summary?.inTransit || 0}</p>
+                          <p className="text-sm text-muted-foreground">Dalam Perjalanan</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-8 w-8 text-purple-600" />
+                        <div>
+                          <p className="text-2xl font-bold">Rp {(shippingData.summary?.totalShippingCost || 0).toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Total Ongkir</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="rounded-2xl">
+                  <CardHeader>
+                    <CardTitle>Detail Pengiriman</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Tanggal Kirim</TableHead>
+                          <TableHead>Alamat Tujuan</TableHead>
+                          <TableHead>Kurir</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Ongkir</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(shippingData.shipments || []).map((shipment: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">{shipment.orderNumber}</TableCell>
+                            <TableCell>{new Date(shipment.shippedAt || shipment.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                            <TableCell className="max-w-xs truncate">{shipment.shippingAddress}</TableCell>
+                            <TableCell>{shipment.courier || 'JNE'}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                shipment.status === 'done' ? 'default' :
+                                shipment.status === 'shipped' ? 'secondary' : 'outline'
+                              }>
+                                {shipment.status === 'done' ? 'Terkirim' :
+                                 shipment.status === 'shipped' ? 'Dikirim' : 'Diproses'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>Rp {(shipment.shippingCost || 0).toLocaleString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Orders Report */}
+        <TabsContent value="orders">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Laporan Pemesanan</h2>
+              <div className="flex gap-2">
+                <Button onClick={exportOrdersToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-orders?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
+            </div>
+
+            {ordersData && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <ShoppingCart className="h-8 w-8 text-primary" />
+                        <div>
+                          <p className="text-2xl font-bold">{ordersData.summary?.totalOrders || 0}</p>
+                          <p className="text-sm text-muted-foreground">Total Pesanan</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <ShoppingCart className="h-8 w-8 text-green-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{ordersData.summary?.completed || 0}</p>
+                          <p className="text-sm text-muted-foreground">Selesai</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <ShoppingCart className="h-8 w-8 text-yellow-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{ordersData.summary?.pending || 0}</p>
+                          <p className="text-sm text-muted-foreground">Pending</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <p className="text-2xl font-bold">Rp {(ordersData.summary?.avgOrderValue || 0).toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Rata-rata Nilai</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Pesanan per Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {(ordersData.ordersByStatus || []).map((status: any) => (
+                          <div key={status._id} className="flex justify-between items-center">
+                            <span className="capitalize">{status._id}</span>
+                            <Badge variant="secondary">{status.count}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Pesanan Harian</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {(ordersData.dailyOrders || []).slice(0, 7).map((day: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <span>{day.date}</span>
+                            <Badge variant="outline">{day.count} pesanan</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="rounded-2xl">
+                  <CardHeader>
+                    <CardTitle>Detail Pesanan Terbaru</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Tanggal</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(ordersData.recentOrders || []).map((order: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">{order.orderNumber}</TableCell>
+                            <TableCell>{new Date(order.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                            <TableCell>{order.customerName}</TableCell>
+                            <TableCell>{order.itemCount} item</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                order.status === 'done' ? 'default' :
+                                order.status === 'shipped' ? 'secondary' :
+                                order.status === 'processed' ? 'outline' : 'destructive'
+                              }>
+                                {order.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>Rp {(order.totalAmount || 0).toLocaleString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Payments Report */}
+        <TabsContent value="payments">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Laporan Pembayaran</h2>
+              <div className="flex gap-2">
+                <Button onClick={exportPaymentsToExcel} className="rounded-2xl">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+                    window.open(`/api/reports/print-payments?${params}`, '_blank');
+                  }} 
+                  className="rounded-2xl"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
+            </div>
+
+            {paymentsData && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <CreditCard className="h-8 w-8 text-primary" />
+                        <div>
+                          <p className="text-2xl font-bold">{paymentsData.summary?.totalPayments || 0}</p>
+                          <p className="text-sm text-muted-foreground">Total Pembayaran</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <CreditCard className="h-8 w-8 text-green-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{paymentsData.summary?.successful || 0}</p>
+                          <p className="text-sm text-muted-foreground">Berhasil</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <CreditCard className="h-8 w-8 text-red-600" />
+                        <div>
+                          <p className="text-2xl font-bold">{paymentsData.summary?.failed || 0}</p>
+                          <p className="text-sm text-muted-foreground">Gagal</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <p className="text-2xl font-bold">Rp {(paymentsData.summary?.totalAmount || 0).toLocaleString('id-ID')}</p>
+                          <p className="text-sm text-muted-foreground">Total Nilai</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Metode Pembayaran</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {(paymentsData.paymentMethods || []).map((method: any) => (
+                          <div key={method._id} className="flex justify-between items-center">
+                            <span className="capitalize">{method._id || 'Transfer Bank'}</span>
+                            <div className="text-right">
+                              <Badge variant="secondary">{method.count}</Badge>
+                              <p className="text-sm text-muted-foreground">
+                                Rp {(method.total || 0).toLocaleString('id-ID')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl">
+                    <CardHeader>
+                      <CardTitle>Status Pembayaran</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {(paymentsData.paymentStatus || []).map((status: any) => (
+                          <div key={status._id} className="flex justify-between items-center">
+                            <span className="capitalize">{status._id}</span>
+                            <Badge variant={
+                              status._id === 'paid' ? 'default' :
+                              status._id === 'pending' ? 'secondary' : 'destructive'
+                            }>
+                              {status.count}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="rounded-2xl">
+                  <CardHeader>
+                    <CardTitle>Transaksi Pembayaran Terbaru</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Tanggal</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Metode</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Jumlah</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(paymentsData.recentPayments || []).map((payment: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">{payment.orderNumber}</TableCell>
+                            <TableCell>{new Date(payment.paidAt || payment.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                            <TableCell>{payment.customerName}</TableCell>
+                            <TableCell>{payment.paymentMethod || 'Transfer Bank'}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                payment.paymentStatus === 'paid' ? 'default' :
+                                payment.paymentStatus === 'pending' ? 'secondary' : 'destructive'
+                              }>
+                                {payment.paymentStatus === 'paid' ? 'Lunas' :
+                                 payment.paymentStatus === 'pending' ? 'Pending' : 'Gagal'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>Rp {(payment.totalAmount || 0).toLocaleString('id-ID')}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

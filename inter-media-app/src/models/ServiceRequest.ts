@@ -20,6 +20,18 @@ const serviceRequestSchema = new mongoose.Schema({
   laborCost: { type: Number, default: 0 },
   partsCost: { type: Number, default: 0 },
   totalCost: { type: Number, default: 0 },
+  // SLA Fields
+  slaTarget: { type: Date }, // Target completion date
+  slaStatus: { 
+    type: String, 
+    enum: ['on-time', 'at-risk', 'overdue'], 
+    default: 'on-time' 
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'normal', 'high', 'urgent'],
+    default: 'normal'
+  }
 }, { timestamps: true });
 
 export default mongoose.models.ServiceRequest || mongoose.model('ServiceRequest', serviceRequestSchema);

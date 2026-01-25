@@ -22,7 +22,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true,t
   },
 }
 module.exports = nextConfig

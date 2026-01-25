@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Edit, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ServiceRequest {
   _id: string;
@@ -123,10 +124,10 @@ export default function AdminServicesPage() {
         setIsDialogOpen(false);
         setEditingService(null);
       } else {
-        alert('Gagal mengupdate servis');
+        toast.error('Gagal mengupdate servis');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 

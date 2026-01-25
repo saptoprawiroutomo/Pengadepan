@@ -27,7 +27,7 @@ export default function FloatingChat() {
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (isOpen && session) {
+    if (isOpen) {
       loadChatHistory();
       startPolling();
     } else {
@@ -43,22 +43,32 @@ export default function FloatingChat() {
 
   const startPolling = () => {
     pollIntervalRef.current = setInterval(() => {
-      if (session) {
-        if (isOpen) {
-          loadChatHistory();
-        } else {
-          // Check for unread messages when chat is closed
-          checkUnreadMessages();
-        }
+      if (isOpen) {
+        loadChatHistory();
+      } else {
+        // Check for unread messages when chat is closed
+        checkUnreadMessages();
       }
     }, 5000);
   };
 
+  const getUserId = () => {
+    if (session?.user?.id) {
+      return session.user.id;
+    }
+    // For guest users, use consistent ID from localStorage
+    let guestId = localStorage.getItem('guestUserId');
+    if (!guestId) {
+      guestId = 'guest-' + Date.now();
+      localStorage.setItem('guestUserId', guestId);
+    }
+    return guestId;
+  };
+
   const checkUnreadMessages = async () => {
-    if (!session) return;
-    
     try {
-      const response = await fetch(`/api/chat/unread-count?userId=${session.user.id}`);
+      const userId = getUserId();
+      const response = await fetch(`/api/chat/unread-count?userId=${userId}`);
       if (response.ok) {
         const { count } = await response.json();
         setUnreadCount(count);
@@ -76,17 +86,16 @@ export default function FloatingChat() {
   };
 
   const loadChatHistory = async () => {
-    if (!session) return;
-    
     try {
-      const response = await fetch(`/api/chat/history?userId=${session.user.id}`);
+      const userId = getUserId();
+      const response = await fetch(`/api/chat/guest?userId=${userId}`);
       if (response.ok) {
         const history = await response.json();
         setMessages(history);
         setIsConnected(true);
         
-        // Mark messages as read when chat is opened
-        if (isOpen && history.length > 0) {
+        // Mark messages as read when chat is opened (only for authenticated users)
+        if (isOpen && history.length > 0 && session?.user?.id) {
           await fetch('/api/chat/mark-read', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -106,13 +115,16 @@ export default function FloatingChat() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !session) return;
+    if (!newMessage.trim()) return;
+
+    const userId = getUserId();
+    const userName = session?.user?.name || 'Guest User';
 
     const tempMessage: Message = {
       _id: Date.now().toString(),
       message: newMessage,
       sender: 'user',
-      senderName: session.user.name || 'User',
+      senderName: userName,
       createdAt: new Date().toISOString()
     };
 
@@ -120,16 +132,18 @@ export default function FloatingChat() {
     setNewMessage('');
 
     try {
-      await fetch('/api/chat/send', {
+      await fetch('/api/chat/guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: session.user.id,
+          userId: userId,
           message: newMessage,
-          senderName: session.user.name
+          senderName: userName
         })
       });
       setIsConnected(true);
+      // Reload messages to get the actual saved message
+      setTimeout(() => loadChatHistory(), 500);
     } catch (error) {
       console.error('Error sending message:', error);
       setIsConnected(false);
@@ -143,18 +157,8 @@ export default function FloatingChat() {
     }
   };
 
-  if (!session) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          onClick={() => window.location.href = '/login'}
-          className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
-      </div>
-    );
-  }
+  // Allow guest users to use chat
+  const isGuest = !session;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, enum: ['Laki-laki', 'Perempuan'] },
   idNumber: { type: String }, // NIK/KTP
   address: { type: String }, // Alamat KTP
+  avatar: { type: String }, // URL foto profil
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

@@ -15,6 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { serviceRequestSchema } from '@/lib/validations';
 import { z } from 'zod';
 import { Wrench } from 'lucide-react';
+import { toast } from 'sonner';
 
 type ServiceRequestForm = z.infer<typeof serviceRequestSchema>;
 
@@ -25,13 +26,19 @@ export default function ServiceRequestPage() {
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<ServiceRequestForm>({
     resolver: zodResolver(serviceRequestSchema),
+    defaultValues: {
+      deviceType: '',
+      complaint: '',
+      address: '',
+      phone: ''
+    }
   });
 
   const onSubmit = async (data: ServiceRequestForm) => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/services', {
+      const response = await fetch('/api/service-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -40,13 +47,13 @@ export default function ServiceRequestPage() {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Request servis berhasil dibuat!');
+        toast.success('Request servis berhasil dibuat!');
         router.push('/service/my');
       } else {
         alert(result.error || 'Gagal membuat request servis');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +95,7 @@ export default function ServiceRequestPage() {
                   name="deviceType"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
                       <SelectTrigger className="rounded-2xl">
                         <SelectValue placeholder="Pilih jenis perangkat" />
                       </SelectTrigger>

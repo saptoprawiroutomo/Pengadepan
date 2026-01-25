@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface CartItem {
   productId: {
@@ -80,7 +81,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     
     if (!shippingAddress.trim()) {
-      alert('Alamat pengiriman wajib diisi');
+      toast.warning('Alamat pengiriman wajib diisi');
       return;
     }
 
@@ -99,13 +100,13 @@ export default function CheckoutPage() {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Pesanan berhasil dibuat!');
+        toast.success('Pesanan berhasil dibuat!');
         router.push('/orders');
       } else {
         alert(result.error || 'Gagal membuat pesanan');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     } finally {
       setIsSubmitting(false);
     }
@@ -179,6 +180,8 @@ export default function CheckoutPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="transfer">Transfer Bank</SelectItem>
+                      <SelectItem value="ovo">OVO</SelectItem>
+                      <SelectItem value="dana">DANA</SelectItem>
                       <SelectItem value="cod">Bayar di Tempat (COD)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -205,6 +208,24 @@ export default function CheckoutPage() {
                           <p className="font-medium text-blue-600">{info.bankName}</p>
                           <p className="text-sm">No. Rekening: <span className="font-mono font-bold">{info.accountNumber}</span></p>
                           <p className="text-sm">Atas Nama: <span className="font-medium">{info.accountName}</span></p>
+                          <p className="text-xs text-gray-600 mt-2">{info.instructions}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {(paymentMethod === 'ovo' || paymentMethod === 'dana') && paymentInfo.length > 0 && (
+                <div className="mt-6 p-4 bg-green-50 rounded-2xl">
+                  <h3 className="font-semibold mb-3">Informasi Pembayaran {paymentMethod.toUpperCase()}</h3>
+                  {paymentInfo
+                    .filter(info => info.type === paymentMethod)
+                    .map((info, index) => (
+                      <div key={index} className="mb-4 last:mb-0">
+                        <div className="bg-white p-3 rounded-lg border">
+                          <p className="font-medium text-green-600">Transfer {paymentMethod.toUpperCase()}</p>
+                          <p className="text-sm">Nomor HP: <span className="font-mono font-bold">{info.phoneNumber}</span></p>
+                          <p className="text-sm">Atas Nama: <span className="font-medium">Toko Inter Media</span></p>
                           <p className="text-xs text-gray-600 mt-2">{info.instructions}</p>
                         </div>
                       </div>

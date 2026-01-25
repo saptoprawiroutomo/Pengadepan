@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Minus, Trash2, ShoppingCart, Printer, BarChart3 } from 'lucide-react';
 import ReceiptPopup from '@/components/pos/ReceiptPopup';
+import { toast } from 'sonner';
 
 interface Product {
   _id: string;
@@ -163,7 +164,7 @@ export default function POSPage() {
 
   const processTransaction = async () => {
     if (items.length === 0) {
-      alert('Tambahkan produk terlebih dahulu');
+      toast('Tambahkan produk terlebih dahulu');
       return;
     }
 
@@ -201,7 +202,7 @@ export default function POSPage() {
         alert(result.error || 'Gagal memproses transaksi');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     } finally {
       setIsProcessing(false);
     }

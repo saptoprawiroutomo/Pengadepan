@@ -27,7 +27,7 @@ export default function HomePage() {
                   Lihat Produk
                 </Button>
               </Link>
-              <Link href="/service-request">
+              <Link href="/service/request">
                 <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto">
                   <Wrench className="mr-2 h-5 w-5" />
                   Service Center
@@ -154,7 +154,7 @@ export default function HomePage() {
           </div>
 
           <div className="text-center mt-12">
-            <Link href="/service-request">
+            <Link href="/service/request">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
                 <Wrench className="mr-2 h-5 w-5" />
                 Request Service

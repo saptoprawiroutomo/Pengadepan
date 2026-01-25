@@ -8,6 +8,25 @@ import Product from '@/models/Product';
 import { generateCode, getNextSequence } from '@/lib/utils-server';
 import mongoose from 'mongoose';
 
+export async function GET(request: NextRequest) {
+  try {
+    const userSession = await getServerSession(authOptions);
+    if (!userSession) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const orders = await Order.find({ userId: userSession.user.id })
+      .populate('items.productId', 'name images')
+      .sort({ createdAt: -1 });
+
+    return NextResponse.json({ orders });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Creating order...');

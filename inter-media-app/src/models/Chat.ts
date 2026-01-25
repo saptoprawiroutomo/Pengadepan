@@ -24,6 +24,10 @@ const ChatSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPromo: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -33,6 +37,7 @@ const ChatSchema = new mongoose.Schema({
 // Index untuk query yang efisien
 ChatSchema.index({ userId: 1, createdAt: -1 });
 ChatSchema.index({ isRead: 1, sender: 1 });
+ChatSchema.index({ isPromo: 1 });
 
 const Chat = mongoose.models.Chat || mongoose.model('Chat', ChatSchema);
 

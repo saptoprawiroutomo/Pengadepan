@@ -69,6 +69,9 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/orders">Pesanan Saya</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/service/my">Servis Saya</Link>
+                  </DropdownMenuItem>
                   {session.user.role === 'admin' && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin">Admin Panel</Link>
@@ -79,7 +82,10 @@ export default function Header() {
                       <Link href="/kasir/pos">POS Kasir</Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+                  <DropdownMenuItem onClick={async () => {
+                    await signOut({ redirect: false });
+                    window.location.href = '/';
+                  }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
       userId: userId || session.user.id,
       message: message.trim(),
       sender: session.user.role === 'admin' ? 'admin' : 'user',
-      senderName: senderName || session.user.name || 'User'
+      senderName: senderName || session.user.name || 'User',
+      isPromo: false
     });
 
     return NextResponse.json({
