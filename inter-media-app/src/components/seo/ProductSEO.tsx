@@ -30,14 +30,14 @@ export function ProductSEO({ product }: ProductSEOProps) {
     "category": product.categoryId?.name || "Elektronik",
     "offers": {
       "@type": "Offer",
-      "url": `${process.env.NEXT_PUBLIC_BASE_URL}/products/${product.slug}`,
+      "url": `${process.env.NEXT_PUBLIC_BASE_URL || 'https://inter-media-app.vercel.app'}/products/${product.slug}`,
       "priceCurrency": "IDR",
       "price": product.price,
       "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Organization",
         "name": "Inter Medi-A",
-        "url": process.env.NEXT_PUBLIC_BASE_URL || "https://localhost:3000"
+        "url": process.env.NEXT_PUBLIC_BASE_URL || "https://inter-media-app.vercel.app"
       }
     },
     "aggregateRating": {

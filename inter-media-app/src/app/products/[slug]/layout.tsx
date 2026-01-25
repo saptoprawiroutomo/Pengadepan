@@ -7,7 +7,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Fetch product data
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/products/slug/${params.slug}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://inter-media-app.vercel.app'}/api/products/slug/${params.slug}`, {
       cache: 'no-store'
     })
     
