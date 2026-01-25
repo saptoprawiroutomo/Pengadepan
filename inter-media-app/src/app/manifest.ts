@@ -1,11 +1,8 @@
 import { MetadataRoute } from 'next'
 
 // Disable manifest in development to avoid CORS issues with GitHub Codespaces
-export default function manifest(): MetadataRoute.Manifest | null {
-  if (process.env.NODE_ENV !== 'production') {
-    return null;
-  }
-
+export default function manifest(): MetadataRoute.Manifest {
+  // Always return manifest for production builds
   return {
     name: 'Inter Medi-A - Toko Printer & Komputer',
     short_name: 'Inter Medi-A',
