@@ -215,24 +215,57 @@ export default function AdminOrdersPage() {
                     <TableCell>Rp {order.total?.toLocaleString()}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        order.paymentMethod === 'cod' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        order.paymentMethod === 'cod' ? 'bg-green-100 text-green-800' : 
+                        order.paymentMethod === 'ovo' ? 'bg-purple-100 text-purple-800' :
+                        'bg-blue-100 text-blue-800'
                       }`}>
                         {order.paymentMethod === 'transfer' ? 'Transfer' : 
-                         order.paymentMethod === 'cod' ? 'COD' : order.paymentMethod}
+                         order.paymentMethod === 'cod' ? 'COD' : 
+                         order.paymentMethod === 'ovo' ? 'OVO' : order.paymentMethod}
                       </span>
                     </TableCell>
                     <TableCell>{getStatusBadge(order.status)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2 flex-wrap">
                         {/* Pending - Waiting for payment */}
-                        {order.status === 'pending' && !order.paymentProof && (
+                        {order.status === 'pending' && !order.paymentProof && order.paymentMethod !== 'ovo' && (
                           <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
                             Menunggu Pembayaran
                           </span>
                         )}
 
-                        {/* Payment uploaded - Need admin verification */}
-                        {order.status === 'pending' && order.paymentProof && (
+                        {/* OVO Payment - Need manual verification */}
+                        {order.status === 'pending' && order.paymentMethod === 'ovo' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                console.log('Approve OVO payment for order:', order._id);
+                                updateOrderStatus(order._id, 'confirmed');
+                              }}
+                              className="rounded-2xl bg-purple-50 text-purple-700 hover:bg-purple-100"
+                            >
+                              ✓ Konfirmasi OVO
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                console.log('Reject OVO payment for order:', order._id);
+                                updateOrderStatus(order._id, 'payment_rejected');
+                              }}
+                              className="rounded-2xl text-red-600 hover:text-red-700"
+                            >
+                              ✗ Tolak OVO
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Transfer Payment uploaded - Need admin verification */}
+                        {order.status === 'pending' && order.paymentProof && order.paymentMethod !== 'ovo' && (
                           <>
                             <Button 
                               size="sm" 
